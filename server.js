@@ -28,7 +28,28 @@ const razorpay = new Razorpay({
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-}).then(() => console.log('Connected to MongoDB'))
+}).then(async () => {
+  console.log('Connected to MongoDB');
+  // Drop legacy indexes that no longer exist in schema
+  try {
+    const db = mongoose.connection.db;
+    const col = db.collection('registrations');
+    const indexes = await col.indexes();
+    const legacyIndexes = [
+      'paymentScreenshot.filename_1',
+      'paymentScreenshot.transactionId_1',
+      'email_1',
+    ];
+    for (const idxName of legacyIndexes) {
+      if (indexes.find(i => i.name === idxName)) {
+        await col.dropIndex(idxName);
+        console.log(`Dropped legacy index: ${idxName}`);
+      }
+    }
+  } catch (e) {
+    console.log('Index cleanup note:', e.message);
+  }
+})
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Middleware
