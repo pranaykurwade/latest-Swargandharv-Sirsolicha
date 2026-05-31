@@ -414,35 +414,42 @@ app.post('/api/registration/:id/refund', async (req, res) => {
   }
 });
 
-// CANCEL /api/registration/:id  (admin, with refund if paid)
+// DELETE /api/registration/:id  — permanently removes record (admin only)
 app.delete('/api/registration/:id', async (req, res) => {
+  try {
+    const registration = await Registration.findOneAndDelete({ registrationId: req.params.id });
+    if (!registration) return res.status(404).json({ success: false, message: 'Registration not found' });
+    res.json({ success: true, message: 'Registration deleted permanently' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// POST /api/registration/:id/cancel  — cancel + auto-refund if paid (admin)
+app.post('/api/registration/:id/cancel', async (req, res) => {
   try {
     const registration = await Registration.findOne({ registrationId: req.params.id });
     if (!registration) return res.status(404).json({ success: false, message: 'Registration not found' });
+    if (registration.status === 'cancelled') return res.json({ success: true, message: 'Already cancelled' });
 
-    // If already cancelled, do nothing
-    if (registration.status === 'cancelled') {
-      return res.json({ success: true, message: 'Registration already cancelled' });
-    }
-
-    // If paid, initiate refund
     let refundResult = null;
-    if (registration.payment && registration.payment.status === 'paid' && registration.payment.razorpayPaymentId) {
+    if (registration.payment?.status === 'paid' && registration.payment?.razorpayPaymentId) {
       try {
         refundResult = await razorpay.payments.refund(registration.payment.razorpayPaymentId, {
-          amount: registration.payment.amount, // refund full amount
+          amount: registration.payment.amount,
           speed: 'optimum',
-          notes: { registrationId: registration.registrationId }
+          notes: { registrationId: registration.registrationId },
         });
       } catch (refundErr) {
-        return res.status(500).json({ success: false, message: 'Refund failed', error: refundErr.error || refundErr.message });
+        console.error('Refund error during cancel:', refundErr.message);
       }
     }
 
-    // Mark as cancelled, store refund info
-    registration.status = 'cancelled';
-    registration.payment.status = (refundResult ? 'refunded' : registration.payment.status);
+    registration.status = refundResult ? 'refunded' : 'cancelled';
+    registration.cancelledAt = new Date();
+    registration.cancelledBy = 'admin';
     if (refundResult) {
+      registration.payment.status = 'refunded';
       registration.payment.refundId = refundResult.id;
       registration.payment.refundStatus = refundResult.status;
       registration.payment.refundedAt = new Date();
@@ -450,7 +457,7 @@ app.delete('/api/registration/:id', async (req, res) => {
     registration.updatedAt = new Date();
     await registration.save();
 
-    res.json({ success: true, message: 'Registration cancelled', refund: refundResult });
+    res.json({ success: true, message: refundResult ? 'Cancelled and refund initiated' : 'Cancelled', refund: refundResult });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

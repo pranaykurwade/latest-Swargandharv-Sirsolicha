@@ -1751,20 +1751,27 @@
 
     async function updateRegStatus(id, status) {
       const msgs = {
-        cancelled: `नोंदणी ${id} रद्द करायची आहे का?`,
+        cancelled: `नोंदणी ${id} रद्द करायची आहे का?\n(पेमेंट झाले असल्यास परतावा आपोआप होईल)`,
         rejected: `नोंदणी ${id} नाकारायची आहे का?`,
         approved: `नोंदणी ${id} मंजूर करायची आहे का?`,
       };
       if (!confirm(msgs[status] || `स्थिती ${status} वर बदलायची आहे का?`)) return;
       try {
-        const res = await fetch(`${API_BASE_URL}/registration/${id}/status`, {
-          method: 'PATCH',
+        const url = status === 'cancelled'
+          ? `${API_BASE_URL}/registration/${id}/cancel`
+          : `${API_BASE_URL}/registration/${id}/status`;
+        const method = status === 'cancelled' ? 'POST' : 'PATCH';
+        const res = await fetch(url, {
+          method,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status }),
         });
         const data = await res.json();
-        if (data.success) { showMessage('स्थिती अपडेट केली', 'success'); loadAdminData(); }
-        else throw new Error(data.message);
+        if (data.success) {
+          const msg = data.refund ? `🚫 रद्द + ↩️ परतावा सुरू (${data.refund.id})` : '🚫 नोंदणी रद्द केली';
+          showMessage(msg, 'success');
+          loadAdminData();
+        } else throw new Error(data.message);
       } catch (e) { showMessage('एरर: ' + e.message, 'error'); }
     }
 
