@@ -13,14 +13,7 @@
       font-family: "Hind", sans-serif;
     }
 
-    .gradient-bg {
-      background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);
-    }
-
-    .card-shadow {
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    }
-
+    /* Only keep utility classes for animation and spinner, rest handled by Tailwind */
     .success-animation {
       animation: slideInUp 0.5s ease-out;
     }
@@ -76,21 +69,9 @@
       }
     }
 
-    .admin-panel {
-      display: none;
-    }
-
-    .admin-panel.active {
-      display: block;
-    }
-
-    .stats-card {
-      background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);
-      color: white;
-    }
-
-    .hero-pattern {
-      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    .gallery-modal-img {
+      max-height: 80vh;
+      object-fit: contain;
     }
 
     .floating-animation {
@@ -109,22 +90,6 @@
       }
     }
 
-    .section-fade {
-      opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 0.6s ease, transform 0.6s ease;
-    }
-
-    .section-fade.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .nav-btn {
-      transition: all 0.2s;
-    }
-
-    /* Toast */
     .toast {
       animation: slideInRight 0.3s ease;
     }
@@ -140,46 +105,6 @@
         opacity: 1;
       }
     }
-
-    /* Admin tabs */
-    .admin-tab {
-      cursor: pointer;
-      padding: 8px 16px;
-      border-radius: 8px;
-      transition: all 0.2s;
-    }
-
-    .admin-tab.active {
-      background: linear-gradient(135deg, #f97316, #dc2626);
-      color: white;
-    }
-
-    .admin-tab-content {
-      display: none;
-    }
-
-    .admin-tab-content.active {
-      display: block;
-    }
-
-    /* Gallery modal */
-    .gallery-modal-img {
-      max-height: 80vh;
-      object-fit: contain;
-    }
-
-    /* Responsive nav */
-    @media (max-width: 768px) {
-      .nav-scroll {
-        overflow-x: auto;
-        white-space: nowrap;
-        -webkit-overflow-scrolling: touch;
-      }
-
-      .nav-scroll::-webkit-scrollbar {
-        display: none;
-      }
-    }
   </style>
 </head>
 
@@ -190,9 +115,9 @@
     style="background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);">
     <div class="max-w-6xl mx-auto text-center">
       <div class="floating-animation text-6xl mb-4">🎵</div>
-      <h1 id="heroTitle" class="text-3xl md:text-5xl font-bold mb-4">स्वरगंधर्व सिरसोलीचा</h1>
-      <p id="heroSubtitle" class="text-xl md:text-2xl text-orange-100 mb-6">लोड होत आहे...</p>
-      <div class="flex flex-wrap justify-center gap-4 mb-8">
+      <h1 id="heroTitle" class="text-2xl sm:text-3xl md:text-5xl font-bold mb-4">स्वरगंधर्व सिरसोलीचा</h1>
+      <p id="heroSubtitle" class="text-lg md:text-2xl text-orange-100 mb-6">लोड होत आहे...</p>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 w-full max-w-lg mx-auto sm:max-w-none">
         <div class="bg-white/20 backdrop-blur rounded-xl px-5 py-3 text-center">
           <div class="text-2xl">📅</div>
           <div id="heroDate" class="font-semibold">—</div>
@@ -267,7 +192,8 @@
 
   <!-- ADMIN DASHBOARD MODAL -->
   <div id="adminDashboardModal" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-2">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl h-full max-h-screen overflow-hidden flex flex-col">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl h-full max-h-screen overflow-hidden flex flex-col"
+      style="border-radius: 0.5rem;">
       <!-- Dashboard Header -->
       <div class="flex items-center justify-between px-6 py-4 border-b"
         style="background: linear-gradient(135deg, #f97316, #dc2626);">
@@ -280,7 +206,7 @@
       <!-- Dashboard Body -->
       <div class="flex-1 overflow-y-auto p-4">
         <!-- Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           <div class="rounded-2xl p-5 text-center text-white"
             style="background: linear-gradient(135deg, #f97316, #dc2626);">
             <p class="text-sm opacity-80">एकूण नोंदणी</p>
@@ -302,12 +228,17 @@
         <!-- Tabs -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden">
           <div class="flex flex-wrap gap-2 p-4 border-b bg-gray-50">
-            <button class="admin-tab active" onclick="switchAdminTab('registrations', this)">📋 नोंदणी</button>
-            <button class="admin-tab" onclick="switchAdminTab('gallery-admin', this)">🖼️ गॅलरी</button>
-            <button class="admin-tab" onclick="switchAdminTab('events-admin', this)">📅 इव्हेंट्स</button>
-            <button class="admin-tab" onclick="switchAdminTab('team-admin', this)">👥 टीम</button>
-            <button class="admin-tab" onclick="switchAdminTab('timeline-admin', this)">⏱️ टाइमलाइन</button>
-            <button class="admin-tab" onclick="switchAdminTab('settings-admin', this)">⚙️ सेटिंग्ज</button>
+            <button class="admin-tab active text-xs md:text-sm" onclick="switchAdminTab('registrations', this)">📋
+              नोंदणी</button>
+            <button class="admin-tab text-xs md:text-sm" onclick="switchAdminTab('gallery-admin', this)">🖼️
+              गॅलरी</button>
+            <button class="admin-tab text-xs md:text-sm" onclick="switchAdminTab('events-admin', this)">📅
+              इव्हेंट्स</button>
+            <button class="admin-tab text-xs md:text-sm" onclick="switchAdminTab('team-admin', this)">👥 टीम</button>
+            <button class="admin-tab text-xs md:text-sm" onclick="switchAdminTab('timeline-admin', this)">⏱️
+              टाइमलाइन</button>
+            <button class="admin-tab text-xs md:text-sm" onclick="switchAdminTab('settings-admin', this)">⚙️
+              सेटिंग्ज</button>
           </div>
           <!-- Registrations Tab -->
           <div id="tab-registrations" class="admin-tab-content active p-4">
@@ -784,7 +715,7 @@
       <div class="bg-white rounded-2xl card-shadow p-8">
         <form id="registrationForm" class="space-y-6" novalidate>
           <!-- Row 1: Name, Age, Phone -->
-          <div class="grid md:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">पूर्ण नाव *</label>
               <input type="text" name="fullName" required placeholder="तुमचे पूर्ण नाव"
@@ -802,7 +733,7 @@
             </div>
           </div>
           <!-- Row 2: Category, Song Type, Song Title -->
-          <div class="grid md:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">वर्ग *</label>
               <select name="category" required
@@ -884,7 +815,7 @@
         <h2 class="text-4xl font-bold text-gray-800 mb-4">🖼️ गॅलरी</h2>
         <p class="text-xl text-gray-600">मागील वर्षातील काही सुंदर क्षणांची झलक</p>
       </div>
-      <div id="galleryGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      <div id="galleryGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <!-- Loaded dynamically -->
         <div class="col-span-full text-center py-8 text-gray-400">
           <div class="loading-spinner mx-auto mb-3"></div>
@@ -907,7 +838,7 @@
         <h2 class="text-4xl font-bold text-gray-800 mb-4">👥 स्पर्धा समिती</h2>
         <p class="text-xl text-gray-600">स्वरगंधर्व सिरसोलीचा स्पर्धेचे आयोजक मंडळ</p>
       </div>
-      <div id="teamGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+      <div id="teamGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <div class="col-span-full text-center py-8 text-gray-400">
           <div class="loading-spinner mx-auto mb-3"></div>
           <p>टीम लोड होत आहे...</p>
@@ -1658,7 +1589,7 @@
     function renderRegistrationsTable(regs) {
       const tbody = document.getElementById('registrationsTable');
       if (!regs.length) {
-        tbody.innerHTML = `<tr><td colspan="11" class="px-4 py-8 text-center text-gray-400">कोणतीही नोंदणी सापडली नाही</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" class="px-4 py-8 text-center text-gray-400 text-sm">कोणतीही नोंदणी सापडली नाही</td></tr>`;
         return;
       }
 

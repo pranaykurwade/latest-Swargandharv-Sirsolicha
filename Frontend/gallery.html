@@ -8,14 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Hind:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    * {
-      font-family: "Hind", sans-serif;
-    }
-
-    .gradient-bg {
-      background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);
-    }
-
+    * { font-family: "Hind", sans-serif; }
     .loading-spinner {
       border: 3px solid #f3f3f3;
       border-top: 3px solid #f97316;
@@ -24,30 +17,11 @@
       height: 24px;
       animation: spin 1s linear infinite;
     }
-
     @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(360deg);
-      }
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
-
-    .gallery-modal-img {
-      max-height: 80vh;
-      object-fit: contain;
-    }
-
-    .img-card {
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .img-card:hover {
-      transform: scale(1.02);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-    }
+    .gallery-modal-img { max-height: 80vh; object-fit: contain; }
   </style>
 </head>
 
@@ -71,7 +45,7 @@
     </div>
 
     <!-- Grid -->
-    <div id="galleryGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    <div id="galleryGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       <div class="col-span-full flex justify-center py-12">
         <div class="loading-spinner"></div>
       </div>

@@ -8,14 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Hind:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    * {
-      font-family: "Hind", sans-serif;
-    }
-
-    .gradient-bg {
-      background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);
-    }
-
+    * { font-family: "Hind", sans-serif; }
     .loading-spinner {
       border: 3px solid #f3f3f3;
       border-top: 3px solid #f97316;
@@ -24,24 +17,9 @@
       height: 24px;
       animation: spin 1s linear infinite;
     }
-
     @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-
-    .member-card {
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .member-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -59,7 +37,7 @@
 
   <!-- Team Grid -->
   <section class="py-16 max-w-6xl mx-auto px-4">
-    <div id="teamGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+    <div id="teamGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       <div class="col-span-full flex justify-center py-12">
         <div class="loading-spinner"></div>
       </div>
