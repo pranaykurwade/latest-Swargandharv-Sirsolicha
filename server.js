@@ -32,7 +32,17 @@ mongoose.connect(process.env.MONGODB_URI, {
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:5500',
+    'http://127.0.0.1:5500',
+    'http://localhost:3000',
+    /\.netlify\.app$/,      // any Netlify subdomain
+    /\.onrender\.com$/,     // Render itself
+    process.env.FRONTEND_URL, // your custom domain if any
+  ].filter(Boolean),
+  credentials: true,
+}));
 app.use(express.json());
 
 // ─── SCHEMAS ────────────────────────────────────────────────────────────────
@@ -51,10 +61,17 @@ const registrationSchema = new mongoose.Schema({
     razorpaySignature: { type: String },
     amount: { type: Number },
     currency: { type: String, default: 'INR' },
-    status: { type: String, default: 'pending' }, // pending, paid, failed
+    status: { type: String, default: 'pending' }, // pending, paid, failed, refunded
     paidAt: { type: Date },
+    refundId: { type: String },
+    refundStatus: { type: String }, // processed, pending, failed
+    refundAmount: { type: Number },
+    refundedAt: { type: Date },
+    refundNotes: { type: String },
   },
-  status: { type: String, default: 'pending' }, // pending, approved, rejected
+  status: { type: String, default: 'pending' }, // pending, approved, rejected, cancelled, refunded
+  cancelledAt: { type: Date },
+  cancelledBy: { type: String },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
@@ -159,7 +176,7 @@ app.post('/api/register', async (req, res) => {
     }
 
     const registrationId = generateRegistrationId();
-    const amount = getRegistrationFee(category) * 100; // paise
+    const amount = req.body.testMode ? 100 : getRegistrationFee(category) * 100; // 100 paise = ₹1 for test
 
     // Create Razorpay order
     const order = await razorpay.orders.create({
@@ -202,7 +219,7 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// POST /api/payment/verify
+// POST /api/payment/verify  — called by frontend after Razorpay checkout
 app.post('/api/payment/verify', async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, registrationId } = req.body;
@@ -226,32 +243,74 @@ app.post('/api/payment/verify', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid payment signature' });
     }
 
-    const registration = await Registration.findOneAndUpdate(
-      { registrationId },
-      {
-        'payment.razorpayPaymentId': razorpay_payment_id,
-        'payment.razorpaySignature': razorpay_signature,
-        'payment.status': 'paid',
-        'payment.paidAt': new Date(),
-        status: 'approved',
-        updatedAt: new Date(),
-      },
-      { new: true }
-    );
-
-    if (!registration) {
-      return res.status(404).json({ success: false, message: 'Registration not found' });
-    }
-
-    // Razorpay sends payment confirmation to user automatically
-    // Enable in Razorpay Dashboard → Settings → Notifications
-
+    await approveRegistrationByOrderId(razorpay_order_id, razorpay_payment_id, razorpay_signature);
     res.json({ success: true, data: { registrationId, status: 'approved' } });
   } catch (error) {
     console.error('Payment verification error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+// POST /api/webhook/razorpay  — called directly by Razorpay servers (backup)
+// Set this URL in Razorpay Dashboard → Settings → Webhooks
+// URL: https://your-domain.com/api/webhook/razorpay
+// Events: payment.captured
+app.post('/api/webhook/razorpay', express.raw({ type: 'application/json' }), async (req, res) => {
+  try {
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    if (webhookSecret) {
+      const signature = req.headers['x-razorpay-signature'];
+      const expectedSig = crypto
+        .createHmac('sha256', webhookSecret)
+        .update(req.body)
+        .digest('hex');
+      if (signature !== expectedSig) {
+        console.error('Webhook signature invalid');
+        return res.status(400).json({ success: false });
+      }
+    }
+
+    const event = JSON.parse(req.body.toString());
+    console.log('Razorpay webhook event:', event.event);
+
+    if (event.event === 'payment.captured') {
+      const payment = event.payload.payment.entity;
+      const orderId = payment.order_id;
+      const paymentId = payment.id;
+      console.log('Webhook: payment captured', { orderId, paymentId });
+      await approveRegistrationByOrderId(orderId, paymentId, null);
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Webhook error:', error);
+    res.status(500).json({ success: false });
+  }
+});
+
+// Helper: approve registration by Razorpay order ID
+async function approveRegistrationByOrderId(orderId, paymentId, signature) {
+  const update = {
+    'payment.razorpayPaymentId': paymentId,
+    'payment.status': 'paid',
+    'payment.paidAt': new Date(),
+    status: 'approved',
+    updatedAt: new Date(),
+  };
+  if (signature) update['payment.razorpaySignature'] = signature;
+
+  const result = await Registration.findOneAndUpdate(
+    { 'payment.razorpayOrderId': orderId },
+    update,
+    { new: true }
+  );
+  if (result) {
+    console.log('Registration approved:', result.registrationId);
+  } else {
+    console.warn('No registration found for orderId:', orderId);
+  }
+  return result;
+}
 
 // GET /api/registration/:id
 app.get('/api/registration/:id', async (req, res) => {
@@ -294,10 +353,13 @@ app.patch('/api/registration/:id/status', async (req, res) => {
   try {
     const { status } = req.body;
     const update = { status, updatedAt: new Date() };
-    // If admin manually approves, also mark payment as paid
     if (status === 'approved') {
       update['payment.status'] = 'paid';
       update['payment.paidAt'] = new Date();
+    }
+    if (status === 'cancelled') {
+      update.cancelledAt = new Date();
+      update.cancelledBy = 'admin';
     }
     const registration = await Registration.findOneAndUpdate(
       { registrationId: req.params.id },
@@ -311,12 +373,84 @@ app.patch('/api/registration/:id/status', async (req, res) => {
   }
 });
 
-// DELETE /api/registration/:id  (admin)
+// POST /api/registration/:id/refund  (admin — initiate Razorpay refund)
+app.post('/api/registration/:id/refund', async (req, res) => {
+  try {
+    const { notes } = req.body;
+    const registration = await Registration.findOne({ registrationId: req.params.id });
+    if (!registration) return res.status(404).json({ success: false, message: 'Registration not found' });
+
+    if (!registration.payment.razorpayPaymentId) {
+      return res.status(400).json({ success: false, message: 'No payment found to refund' });
+    }
+    if (registration.payment.status === 'refunded') {
+      return res.status(400).json({ success: false, message: 'Already refunded' });
+    }
+
+    // Initiate refund via Razorpay
+    const refund = await razorpay.payments.refund(registration.payment.razorpayPaymentId, {
+      amount: registration.payment.amount, // full refund in paise
+      notes: { reason: notes || 'Admin initiated refund', registrationId: req.params.id },
+    });
+
+    await Registration.findOneAndUpdate(
+      { registrationId: req.params.id },
+      {
+        status: 'refunded',
+        'payment.status': 'refunded',
+        'payment.refundId': refund.id,
+        'payment.refundStatus': refund.status,
+        'payment.refundAmount': refund.amount,
+        'payment.refundedAt': new Date(),
+        'payment.refundNotes': notes || '',
+        updatedAt: new Date(),
+      }
+    );
+
+    res.json({ success: true, data: { refundId: refund.id, status: refund.status, amount: refund.amount } });
+  } catch (error) {
+    console.error('Refund error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// CANCEL /api/registration/:id  (admin, with refund if paid)
 app.delete('/api/registration/:id', async (req, res) => {
   try {
-    const registration = await Registration.findOneAndDelete({ registrationId: req.params.id });
+    const registration = await Registration.findOne({ registrationId: req.params.id });
     if (!registration) return res.status(404).json({ success: false, message: 'Registration not found' });
-    res.json({ success: true });
+
+    // If already cancelled, do nothing
+    if (registration.status === 'cancelled') {
+      return res.json({ success: true, message: 'Registration already cancelled' });
+    }
+
+    // If paid, initiate refund
+    let refundResult = null;
+    if (registration.payment && registration.payment.status === 'paid' && registration.payment.razorpayPaymentId) {
+      try {
+        refundResult = await razorpay.payments.refund(registration.payment.razorpayPaymentId, {
+          amount: registration.payment.amount, // refund full amount
+          speed: 'optimum',
+          notes: { registrationId: registration.registrationId }
+        });
+      } catch (refundErr) {
+        return res.status(500).json({ success: false, message: 'Refund failed', error: refundErr.error || refundErr.message });
+      }
+    }
+
+    // Mark as cancelled, store refund info
+    registration.status = 'cancelled';
+    registration.payment.status = (refundResult ? 'refunded' : registration.payment.status);
+    if (refundResult) {
+      registration.payment.refundId = refundResult.id;
+      registration.payment.refundStatus = refundResult.status;
+      registration.payment.refundedAt = new Date();
+    }
+    registration.updatedAt = new Date();
+    await registration.save();
+
+    res.json({ success: true, message: 'Registration cancelled', refund: refundResult });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

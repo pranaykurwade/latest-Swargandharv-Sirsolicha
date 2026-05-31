@@ -317,9 +317,11 @@
               <select id="regStatusFilter" onchange="filterRegistrations()"
                 class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400">
                 <option value="">सर्व स्थिती</option>
-                <option value="pending">प्रलंबित</option>
-                <option value="approved">मंजूर</option>
-                <option value="rejected">नाकारले</option>
+                <option value="pending">⏳ प्रलंबित</option>
+                <option value="approved">✅ मंजूर</option>
+                <option value="rejected">❌ नाकारले</option>
+                <option value="cancelled">🚫 रद्द</option>
+                <option value="refunded">↩️ परतावा</option>
               </select>
               <select id="regCategoryFilter" onchange="filterRegistrations()"
                 class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400">
@@ -557,14 +559,67 @@
                     <p class="text-xs text-gray-500">बाल / महिला / पुरुष वर्गाचे कार्ड — "About" खालील विभाग</p>
                   </div>
                 </div>
-                <div class="p-4">
-                  <div class="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2 mb-3 font-mono leading-relaxed">
-                    Format: [{"name":"बाल वर्ग","age":"15 वर्षाआतील","details":["✓ फी: ₹201","✓ 5 मिनिटे","• प्रथम:
-                    ₹3,001"]}, ...]
+                <div class="p-4 space-y-5">
+                  <!-- Category 1 -->
+                  <div class="bg-emerald-50 rounded-xl p-4 space-y-2">
+                    <p class="text-sm font-semibold text-emerald-700">👶 वर्ग 1 (बाल वर्ग)</p>
+                    <div class="grid md:grid-cols-2 gap-2">
+                      <div><label class="text-xs text-gray-500 mb-1 block">वर्गाचे नाव <span class="text-gray-400">→
+                            कार्डचे शीर्षक</span></label>
+                        <input type="text" id="cat1_name" placeholder="उदा. बाल वर्ग"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
+                      </div>
+                      <div><label class="text-xs text-gray-500 mb-1 block">वयोमर्यादा <span class="text-gray-400">→
+                            कार्डखालील ओळ</span></label>
+                        <input type="text" id="cat1_age" placeholder="उदा. 15 वर्षाआतील"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
+                      </div>
+                    </div>
+                    <div><label class="text-xs text-gray-500 mb-1 block">माहिती (प्रत्येक ओळ = एक मुद्दा) <span
+                          class="text-gray-400">→ कार्डमधील यादी</span></label>
+                      <textarea id="cat1_details" rows="4"
+                        placeholder="✓ नोंदणी फी: ₹201&#10;✓ 5 मिनिटांपर्यंत&#10;• प्रथम: ₹3,001&#10;• द्वितीय: ₹2,501"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400"></textarea>
+                    </div>
                   </div>
-                  <textarea id="s_categories" rows="7"
-                    placeholder='[{"name":"बाल वर्ग","age":"15 वर्षाआतील","details":["✓ नोंदणी फी: ₹201","✓ 5 मिनिटांपर्यंत","• प्रथम: ₹3,001"]}]'
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400 font-mono"></textarea>
+                  <!-- Category 2 -->
+                  <div class="bg-rose-50 rounded-xl p-4 space-y-2">
+                    <p class="text-sm font-semibold text-rose-700">👩 वर्ग 2 (महिला वर्ग)</p>
+                    <div class="grid md:grid-cols-2 gap-2">
+                      <div><label class="text-xs text-gray-500 mb-1 block">वर्गाचे नाव</label>
+                        <input type="text" id="cat2_name" placeholder="उदा. महिला वर्ग"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
+                      </div>
+                      <div><label class="text-xs text-gray-500 mb-1 block">वयोमर्यादा</label>
+                        <input type="text" id="cat2_age" placeholder="उदा. 15+ वर्षे"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
+                      </div>
+                    </div>
+                    <div><label class="text-xs text-gray-500 mb-1 block">माहिती (प्रत्येक ओळ = एक मुद्दा)</label>
+                      <textarea id="cat2_details" rows="4"
+                        placeholder="✓ नोंदणी फी: ₹301&#10;✓ 7 मिनिटांपर्यंत&#10;• प्रथम: ₹5,001&#10;• द्वितीय: ₹4,001"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400"></textarea>
+                    </div>
+                  </div>
+                  <!-- Category 3 -->
+                  <div class="bg-cyan-50 rounded-xl p-4 space-y-2">
+                    <p class="text-sm font-semibold text-cyan-700">👨 वर्ग 3 (पुरुष वर्ग)</p>
+                    <div class="grid md:grid-cols-2 gap-2">
+                      <div><label class="text-xs text-gray-500 mb-1 block">वर्गाचे नाव</label>
+                        <input type="text" id="cat3_name" placeholder="उदा. पुरुष वर्ग"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
+                      </div>
+                      <div><label class="text-xs text-gray-500 mb-1 block">वयोमर्यादा</label>
+                        <input type="text" id="cat3_age" placeholder="उदा. 15+ वर्षे"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
+                      </div>
+                    </div>
+                    <div><label class="text-xs text-gray-500 mb-1 block">माहिती (प्रत्येक ओळ = एक मुद्दा)</label>
+                      <textarea id="cat3_details" rows="4"
+                        placeholder="✓ नोंदणी फी: ₹301&#10;✓ 7 मिनिटांपर्यंत&#10;• प्रथम: ₹7,001&#10;• द्वितीय: ₹5,001"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400"></textarea>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -755,6 +810,16 @@
             <p class="font-semibold text-orange-700 mb-2">💳 ऑनलाइन पेमेंट (Razorpay)</p>
             <p>नोंदणी फॉर्म सबमिट केल्यावर Razorpay पेमेंट विंडो उघडेल. पेमेंट यशस्वी झाल्यावर नोंदणी पूर्ण होईल.</p>
             <p class="mt-1">• बाल वर्ग: ₹201 &nbsp;|&nbsp; महिला/पुरुष वर्ग: ₹301</p>
+            <!-- TEST MODE TOGGLE — remove before going live -->
+            <div class="mt-3 pt-3 border-t border-orange-200 flex items-center gap-3">
+              <label class="flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" id="testModeToggle" onchange="toggleTestMode(this)"
+                  class="w-4 h-4 accent-orange-500" />
+                <span class="text-orange-700 font-medium text-xs">🧪 Test Mode (₹1 payment — for testing only)</span>
+              </label>
+              <span id="testModeLabel"
+                class="hidden text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-semibold">TEST</span>
+            </div>
           </div>
           <div class="text-center pt-2">
             <button type="submit" id="submitBtn"
@@ -768,6 +833,28 @@
     </div>
   </section>
 
+
+  <!-- STATUS SECTION -->
+  <section id="status" class="section-fade py-20 bg-white">
+    <div class="max-w-2xl mx-auto px-4">
+      <div class="text-center mb-10">
+        <h2 class="text-4xl font-bold text-gray-800 mb-4">📋 नोंदणी स्थिती</h2>
+        <p class="text-xl text-gray-600">तुमच्या नोंदणीची स्थिती तपासा</p>
+      </div>
+      <div class="bg-white rounded-2xl card-shadow p-8">
+        <div class="flex gap-3">
+          <input type="text" id="statusRegistrationId" placeholder="SG123456"
+            class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+            onkeydown="if(event.key==='Enter') checkStatus()" />
+          <button onclick="checkStatus()" class="text-white px-6 py-3 rounded-lg font-medium transition"
+            style="background: linear-gradient(135deg, #f97316, #dc2626);">
+            तपासा
+          </button>
+        </div>
+        <div id="statusResult" class="hidden mt-6"></div>
+      </div>
+    </div>
+  </section>
 
   <!-- GALLERY SECTION -->
   <section id="gallery" class="section-fade py-20 bg-gray-50">
@@ -925,9 +1012,8 @@
 
   <script>
     // ─── CONFIG ──────────────────────────────────────────────────────────────────
-    // Change API_BASE_URL to your deployed backend URL when going live
-    // Example: const API_BASE_URL = 'https://your-app.onrender.com/api';
-    const API_BASE_URL = 'http://localhost:3000/api';
+
+    const API_BASE_URL = 'https://latest-swargandharv-sirsolicha.onrender.com/api';
     const ADMIN_PASSWORD = 'pranay4942';
 
     // ─── STATE ───────────────────────────────────────────────────────────────────
@@ -1011,6 +1097,10 @@
 
       try {
         const data = Object.fromEntries(new FormData(form));
+        // Add test mode flag if enabled
+        const isTest = document.getElementById('testModeToggle')?.checked;
+        if (isTest) data.testMode = true;
+
         const res = await fetch(`${API_BASE_URL}/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1021,8 +1111,9 @@
 
         // Open Razorpay
         const { registrationId, orderId, amount, currency, keyId } = result.data;
-        openRazorpay({ registrationId, orderId, amount, currency, keyId, name: data.fullName, phone: data.phone });
+        openRazorpay({ registrationId, orderId, amount, currency, keyId, name: data.fullName, phone: data.phone, isTest });
         form.reset();
+        if (isTest) { document.getElementById('testModeToggle').checked = false; toggleTestMode({ checked: false }); }
       } catch (err) {
         showMessage(err.message, 'error');
         form.classList.add('error-shake');
@@ -1032,13 +1123,23 @@
       }
     }
 
-    function openRazorpay({ registrationId, orderId, amount, currency, keyId, name, phone }) {
+    function toggleTestMode(cb) {
+      const label = document.getElementById('testModeLabel');
+      if (cb.checked) {
+        label.classList.remove('hidden');
+        showMessage('🧪 Test Mode ON — ₹1 payment होईल', 'warning');
+      } else {
+        label.classList.add('hidden');
+      }
+    }
+
+    function openRazorpay({ registrationId, orderId, amount, currency, keyId, name, phone, isTest }) {
       const options = {
         key: keyId,
         amount,
         currency,
         name: 'स्वरगंधर्व सिरसोलीचा',
-        description: 'एकल गीत गायन स्पर्धा 2025 नोंदणी',
+        description: isTest ? '🧪 TEST PAYMENT — ₹1 only' : 'एकल गीत गायन स्पर्धा 2025 नोंदणी',
         order_id: orderId,
         prefill: { name, contact: phone },
         theme: { color: '#f97316' },
@@ -1294,7 +1395,22 @@
       set('s_rules', s.rules); set('s_phone1', s.phone1); set('s_phone2', s.phone2);
       set('s_instagram', s.instagram); set('s_address', s.address);
       set('s_importantInfo', s.importantInfo);
-      set('s_categories', s.categories);
+      // Load categories into simple fields
+      if (s.categories) {
+        try {
+          const cats = JSON.parse(s.categories);
+          [1, 2, 3].forEach(i => {
+            const c = cats[i - 1];
+            if (!c) return;
+            const n = document.getElementById('cat' + i + '_name');
+            const a = document.getElementById('cat' + i + '_age');
+            const d = document.getElementById('cat' + i + '_details');
+            if (n) n.value = c.name || '';
+            if (a) a.value = c.age || '';
+            if (d) d.value = (c.details || []).join('\n');
+          });
+        } catch (e) { }
+      }
     }
 
     async function saveAllSettings() {
@@ -1307,7 +1423,11 @@
         rules: get('s_rules'), phone1: get('s_phone1'), phone2: get('s_phone2'),
         instagram: get('s_instagram'), address: get('s_address'),
         importantInfo: get('s_importantInfo'),
-        categories: get('s_categories'),
+        categories: JSON.stringify([1, 2, 3].map(i => ({
+          name: (document.getElementById('cat' + i + '_name')?.value || '').trim(),
+          age: (document.getElementById('cat' + i + '_age')?.value || '').trim(),
+          details: (document.getElementById('cat' + i + '_details')?.value || '').split('\n').map(l => l.trim()).filter(Boolean),
+        })).filter(c => c.name)),
       };
       // Remove empty keys
       Object.keys(payload).forEach(k => { if (!payload[k]) delete payload[k]; });
@@ -1496,20 +1616,49 @@
     function renderRegistrationsTable(regs) {
       const tbody = document.getElementById('registrationsTable');
       if (!regs.length) {
-        tbody.innerHTML = `<tr><td colspan="10" class="px-4 py-8 text-center text-gray-400">कोणतीही नोंदणी सापडली नाही</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" class="px-4 py-8 text-center text-gray-400">कोणतीही नोंदणी सापडली नाही</td></tr>`;
         return;
       }
+
       const statusBadge = s => {
-        const map = { approved: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-red-800', pending: 'bg-yellow-100 text-yellow-800' };
-        const text = { approved: 'मंजूर', rejected: 'नाकारले', pending: 'प्रलंबित' };
+        const map = {
+          approved: 'bg-green-100 text-green-800',
+          rejected: 'bg-red-100 text-red-800',
+          pending: 'bg-yellow-100 text-yellow-800',
+          cancelled: 'bg-gray-200 text-gray-600',
+          refunded: 'bg-blue-100 text-blue-700',
+        };
+        const text = {
+          approved: '✅ मंजूर', rejected: '❌ नाकारले', pending: '⏳ प्रलंबित',
+          cancelled: '🚫 रद्द', refunded: '↩️ परतावा',
+        };
         return `<span class="px-2 py-1 text-xs font-semibold rounded-full ${map[s] || 'bg-gray-100 text-gray-700'}">${text[s] || s}</span>`;
       };
+
       const payBadge = p => {
-        const paid = p?.status === 'paid';
-        return `<span class="px-2 py-1 text-xs font-semibold rounded-full ${paid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${paid ? '✅ पेमेंट' : '⏳ प्रलंबित'}</span>`;
+        const map = { paid: 'bg-green-100 text-green-800', pending: 'bg-yellow-100 text-yellow-800', failed: 'bg-red-100 text-red-700', refunded: 'bg-blue-100 text-blue-700' };
+        const text = { paid: '✅ पेमेंट झाले', pending: '⏳ प्रलंबित', failed: '❌ अयशस्वी', refunded: '↩️ परतावा' };
+        const s = p?.status || 'pending';
+        return `<span class="px-2 py-1 text-xs font-semibold rounded-full ${map[s] || 'bg-gray-100 text-gray-700'}">${text[s] || s}</span>`;
       };
+
+      const actionCell = r => {
+        if (r.status === 'refunded')
+          return `<button onclick="showRefundDetails('${r.registrationId}')" class="text-blue-500 hover:text-blue-700 text-xs underline">परतावा तपशील</button>`;
+        if (r.status === 'cancelled')
+          return `<span class="text-xs text-gray-400">रद्द केले</span>`;
+        if (r.status === 'approved')
+          return `<div class="flex flex-col gap-1">
+            <button onclick="updateRegStatus('${r.registrationId}', 'cancelled')" class="text-orange-500 hover:text-orange-700 text-xs underline">🚫 रद्द करा</button>
+            ${r.payment?.razorpayPaymentId ? `<button onclick="initiateRefund('${r.registrationId}')" class="text-blue-500 hover:text-blue-700 text-xs underline">↩️ परतावा द्या</button>` : ''}
+          </div>`;
+        if (r.status === 'rejected')
+          return `<span class="text-xs text-gray-400">नाकारले</span>`;
+        return `<span class="text-xs text-gray-400">पेमेंट प्रतीक्षेत</span>`;
+      };
+
       tbody.innerHTML = regs.map(r => `
-        <tr class="hover:bg-gray-50 transition">
+        <tr class="hover:bg-gray-50 transition ${r.status === 'cancelled' || r.status === 'refunded' ? 'opacity-60' : ''}">
           <td class="px-4 py-3 text-xs font-mono text-gray-700">${r.registrationId}</td>
           <td class="px-4 py-3 text-sm font-medium text-gray-900">${escHtml(r.fullName)}</td>
           <td class="px-4 py-3 text-sm text-gray-600">${r.age}</td>
@@ -1519,19 +1668,10 @@
           <td class="px-4 py-3">${payBadge(r.payment)}</td>
           <td class="px-4 py-3">${statusBadge(r.status)}</td>
           <td class="px-4 py-3 text-xs text-gray-500">${new Date(r.createdAt).toLocaleDateString('mr-IN')}</td>
-          <td class="px-4 py-3 text-xs">
-            ${r.status === 'approved'
-          ? `<button onclick="updateRegStatus('${r.registrationId}', 'rejected')" class="text-red-400 hover:text-red-600 underline">रद्द करा</button>`
-          : r.status === 'rejected'
-            ? `<span class="text-gray-400">रद्द</span>`
-            : `<button onclick="updateRegStatus('${r.registrationId}', 'approved')" class="text-green-600 hover:text-green-800 underline font-medium">मंजूर करा</button>`
-        }
-          </td>
+          <td class="px-4 py-3 text-xs">${actionCell(r)}</td>
           <td class="px-4 py-3">
             <button onclick="deleteRegistration('${r.registrationId}')"
-              class="bg-red-100 hover:bg-red-200 text-red-600 px-2 py-1 rounded text-xs font-medium transition">
-              🗑️ हटवा
-            </button>
+              class="bg-red-100 hover:bg-red-200 text-red-600 px-2 py-1 rounded text-xs font-medium transition">🗑️</button>
           </td>
         </tr>`).join('');
     }
@@ -1546,11 +1686,66 @@
       } catch (e) { showMessage('एरर: ' + e.message, 'error'); }
     }
 
+    async function initiateRefund(id) {
+      const notes = prompt(`नोंदणी ${id} साठी परतावा कारण (पर्यायी):`);
+      if (notes === null) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/registration/${id}/refund`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ notes }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          showMessage(`↩️ परतावा सुरू झाला! Refund ID: ${data.data.refundId}`, 'success');
+          loadAdminData();
+        } else throw new Error(data.message);
+      } catch (e) { showMessage('परतावा एरर: ' + e.message, 'error'); }
+    }
+
+    async function showRefundDetails(id) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/registration/${id}`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+        const r = data.data;
+        const p = r.payment;
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4';
+        modal.onclick = e => { if (e.target === modal) modal.remove(); };
+        modal.innerHTML = `
+          <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-bold text-gray-800">↩️ परतावा तपशील</h3>
+              <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+            </div>
+            <div class="space-y-3 text-sm">
+              <div class="flex justify-between py-2 border-b"><span class="text-gray-500">नोंदणी आयडी</span><span class="font-medium">${r.registrationId}</span></div>
+              <div class="flex justify-between py-2 border-b"><span class="text-gray-500">नाव</span><span class="font-medium">${escHtml(r.fullName)}</span></div>
+              <div class="flex justify-between py-2 border-b"><span class="text-gray-500">Razorpay Payment ID</span><span class="font-mono text-xs">${p?.razorpayPaymentId || '—'}</span></div>
+              <div class="flex justify-between py-2 border-b"><span class="text-gray-500">Refund ID</span><span class="font-mono text-xs text-blue-600">${p?.refundId || '—'}</span></div>
+              <div class="flex justify-between py-2 border-b"><span class="text-gray-500">परतावा स्थिती</span>
+                <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${p?.refundStatus === 'processed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                  ${p?.refundStatus || '—'}
+                </span>
+              </div>
+              <div class="flex justify-between py-2 border-b"><span class="text-gray-500">परतावा रक्कम</span><span class="font-semibold text-green-700">₹${p?.refundAmount ? (p.refundAmount / 100).toFixed(0) : '—'}</span></div>
+              <div class="flex justify-between py-2 border-b"><span class="text-gray-500">परतावा दिनांक</span><span>${p?.refundedAt ? new Date(p.refundedAt).toLocaleDateString('mr-IN') : '—'}</span></div>
+              ${p?.refundNotes ? `<div class="flex justify-between py-2"><span class="text-gray-500">कारण</span><span>${escHtml(p.refundNotes)}</span></div>` : ''}
+            </div>
+            <button onclick="this.closest('.fixed').remove()" class="mt-5 w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg text-sm transition">बंद करा</button>
+          </div>`;
+        document.body.appendChild(modal);
+      } catch (e) { showMessage('एरर: ' + e.message, 'error'); }
+    }
+
     async function updateRegStatus(id, status) {
-      const msg = status === 'rejected'
-        ? `नोंदणी ${id} रद्द करायची आहे का?`
-        : `नोंदणी ${id} मंजूर करायची आहे का? (पेमेंट manually verified)`;
-      if (!confirm(msg)) return;
+      const msgs = {
+        cancelled: `नोंदणी ${id} रद्द करायची आहे का?`,
+        rejected: `नोंदणी ${id} नाकारायची आहे का?`,
+        approved: `नोंदणी ${id} मंजूर करायची आहे का?`,
+      };
+      if (!confirm(msgs[status] || `स्थिती ${status} वर बदलायची आहे का?`)) return;
       try {
         const res = await fetch(`${API_BASE_URL}/registration/${id}/status`, {
           method: 'PATCH',
