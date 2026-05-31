@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="mr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>संपूर्ण गॅलरी - स्वरगंधर्व सिरसोलीचा</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Hind:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      font-family: "Hind", sans-serif;
+    }
+
+    .gradient-bg {
+      background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);
+    }
+
+    .loading-spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #f97316;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .gallery-modal-img {
+      max-height: 80vh;
+      object-fit: contain;
+    }
+
+    .img-card {
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .img-card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50">
+
+  <!-- Header -->
+  <div class="gradient-bg text-white py-10 px-4 text-center">
+    <h1 class="text-3xl md:text-4xl font-bold mb-2">🖼️ संपूर्ण गॅलरी</h1>
+    <p class="text-orange-100">या संगीतमय प्रवासातील सर्व खास क्षण</p>
+    <a href="index.html"
+      class="inline-block mt-4 bg-white/20 hover:bg-white/30 text-white px-5 py-2 rounded-lg text-sm transition">← मुख्य
+      पृष्ठावर परत</a>
+  </div>
+
+  <!-- Search & Controls -->
+  <div class="max-w-6xl mx-auto px-4 py-6">
+    <div class="flex flex-wrap gap-3 items-center justify-between mb-6">
+      <input type="text" id="gallerySearch" placeholder="फोटो शोधा..." oninput="debounceSearch()"
+        class="flex-1 min-w-48 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent text-sm" />
+      <span id="galleryCount" class="text-sm text-gray-500"></span>
+    </div>
+
+    <!-- Grid -->
+    <div id="galleryGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      <div class="col-span-full flex justify-center py-12">
+        <div class="loading-spinner"></div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div id="pagination" class="flex justify-center gap-2 mt-8 flex-wrap"></div>
+  </div>
+
+  <!-- Lightbox -->
+  <div id="lightboxModal" class="fixed inset-0 bg-black/90 z-50 hidden items-center justify-center p-4"
+    onclick="closeLightbox(event)">
+    <div class="relative max-w-4xl w-full">
+      <button onclick="closeLightboxBtn()"
+        class="absolute -top-10 right-0 text-white text-3xl hover:text-gray-300 leading-none">×</button>
+      <img id="lightboxImg" src="" alt="" class="gallery-modal-img w-full rounded-lg" />
+      <p id="lightboxCaption" class="text-white text-center mt-3 text-sm"></p>
+      <p id="lightboxDesc" class="text-gray-300 text-center text-xs mt-1"></p>
+      <div class="flex justify-center gap-4 mt-4">
+        <button onclick="downloadImage()" id="lightboxDownload" data-src=""
+          class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm transition">📥 डाउनलोड</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Change to your deployed backend URL when going live
+    // Example: const API_BASE_URL = 'https://your-app.onrender.com/api';
+    const API_BASE_URL = 'http://localhost:3000/api';
+    let currentPage = 1;
+    let searchTimeout;
+
+    async function loadGallery(page = 1, search = '') {
+      const grid = document.getElementById('galleryGrid');
+      const countEl = document.getElementById('galleryCount');
+      grid.innerHTML = `<div class="col-span-full flex justify-center py-12"><div class="loading-spinner"></div></div>`;
+
+      try {
+        const params = new URLSearchParams({ page, limit: 16, search });
+        const res = await fetch(`${API_BASE_URL}/gallery?${params}`);
+        const data = await res.json();
+
+        if (!data.success) throw new Error(data.message);
+
+        if (!data.data.length && page === 1 && !search) {
+          grid.innerHTML = `<div class="col-span-full text-center py-16 text-gray-400">
+            <div class="text-5xl mb-4">📭</div>
+            <p class="text-lg font-medium">अद्याप कोणतेही फोटो जोडलेले नाहीत</p>
+            <p class="text-sm mt-2">Admin पॅनेलमधून फोटो अपलोड करा</p>
+          </div>`;
+          countEl.textContent = '';
+          return;
+        }
+
+        if (!data.data.length) {
+          grid.innerHTML = `<p class="col-span-full text-center text-gray-400 py-12">कोणतेही फोटो सापडले नाहीत</p>`;
+          countEl.textContent = '';
+          renderPagination(0, 1);
+          return;
+        }
+
+        countEl.textContent = `${data.total} फोटो`;
+        grid.innerHTML = data.data.map(img => `
+      <div class="img-card cursor-pointer rounded-xl overflow-hidden shadow-md bg-white"
+           onclick="openLightbox('${img.imageUrl}', '${escHtml(img.title)}', '${escHtml(img.description || '')}', '${img.imageUrl}')">
+        <img src="${img.imageUrl}" alt="${escHtml(img.title)}" class="w-full h-44 object-cover" loading="lazy" />
+        <div class="p-2">
+          <p class="text-sm font-medium text-gray-800 truncate">${escHtml(img.title)}</p>
+          ${img.description ? `<p class="text-xs text-gray-500 truncate">${escHtml(img.description)}</p>` : ''}
+          ${img.year ? `<p class="text-xs text-orange-500">${img.year}</p>` : ''}
+        </div>
+      </div>`).join('');
+
+        renderPagination(data.pages, page);
+      } catch {
+        grid.innerHTML = `<div class="col-span-full text-center py-16 text-gray-400">
+          <div class="text-5xl mb-4">⚠️</div>
+          <p class="text-lg font-medium">गॅलरी लोड करताना एरर आली</p>
+          <p class="text-sm mt-2">कृपया पुन्हा प्रयत्न करा</p>
+          <button onclick="loadGallery()" class="mt-4 bg-orange-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-orange-600 transition">🔄 पुन्हा प्रयत्न करा</button>
+        </div>`;
+        countEl.textContent = '';
+      }
+    }
+
+    function renderPagination(totalPages, current) {
+      const el = document.getElementById('pagination');
+      if (totalPages <= 1) { el.innerHTML = ''; return; }
+      let html = '';
+      for (let i = 1; i <= totalPages; i++) {
+        html += `<button onclick="goToPage(${i})"
+      class="px-4 py-2 rounded-lg text-sm font-medium transition ${i === current ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-orange-50 border border-gray-200'}">${i}</button>`;
+      }
+      el.innerHTML = html;
+    }
+
+    function goToPage(page) {
+      currentPage = page;
+      loadGallery(page, document.getElementById('gallerySearch').value);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function debounceSearch() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        currentPage = 1;
+        loadGallery(1, document.getElementById('gallerySearch').value);
+      }, 400);
+    }
+
+    function openLightbox(src, title, desc, downloadSrc) {
+      document.getElementById('lightboxImg').src = src;
+      document.getElementById('lightboxCaption').textContent = title || '';
+      document.getElementById('lightboxDesc').textContent = desc || '';
+      document.getElementById('lightboxDownload').dataset.src = downloadSrc || src;
+      const modal = document.getElementById('lightboxModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    function closeLightbox(e) { if (e.target === document.getElementById('lightboxModal')) closeLightboxBtn(); }
+    function closeLightboxBtn() {
+      const modal = document.getElementById('lightboxModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+    async function downloadImage() {
+      const btn = document.getElementById('lightboxDownload');
+      const src = btn.dataset.src;
+      if (!src) return;
+      const title = document.getElementById('lightboxCaption').textContent || 'image';
+      const ext = src.split('?')[0].split('.').pop() || 'jpg';
+      const filename = title.replace(/[^\w\u0900-\u097F]/g, '_').slice(0, 40) + '.' + ext;
+      btn.textContent = '⏳ डाउनलोड...';
+      btn.disabled = true;
+      try {
+        const res = await fetch(src);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch {
+        window.open(src, '_blank');
+      } finally {
+        btn.textContent = '📥 डाउनलोड';
+        btn.disabled = false;
+      }
+    }
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightboxBtn(); });
+    loadGallery();
+  </script>
+</body>
+
+</html>

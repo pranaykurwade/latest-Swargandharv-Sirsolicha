@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="mr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>स्पर्धा समिती - स्वरगंधर्व सिरसोलीचा</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Hind:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      font-family: "Hind", sans-serif;
+    }
+
+    .gradient-bg {
+      background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);
+    }
+
+    .loading-spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #f97316;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .member-card {
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .member-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50">
+
+  <!-- Header -->
+  <div class="gradient-bg text-white py-14 px-4 text-center">
+    <h1 class="text-3xl md:text-5xl font-bold mb-3">👥 स्पर्धा समिती</h1>
+    <p class="text-orange-100 text-lg">स्वरगंधर्व सिरसोलीचा स्पर्धेचे आयोजक मंडळ</p>
+    <a href="index.html"
+      class="inline-block mt-5 bg-white/20 hover:bg-white/30 text-white px-5 py-2 rounded-lg text-sm transition">← मुख्य
+      पृष्ठावर परत</a>
+  </div>
+
+  <!-- Team Grid -->
+  <section class="py-16 max-w-6xl mx-auto px-4">
+    <div id="teamGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+      <div class="col-span-full flex justify-center py-12">
+        <div class="loading-spinner"></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Change to your deployed backend URL when going live
+    // Example: const API_BASE_URL = 'https://your-app.onrender.com/api';
+    const API_BASE_URL = 'http://localhost:3000/api';
+
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function renderMembers(members) {
+      const grid = document.getElementById('teamGrid');
+      grid.innerHTML = members.map(m => `
+        <div class="member-card bg-white rounded-2xl shadow-lg p-5 text-center">
+          <img src="${m.photoUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(m.name) + '&background=f97316&color=fff'}"
+               alt="${escHtml(m.name)}" class="w-24 h-24 mx-auto rounded-full mb-3 object-cover shadow-md" loading="lazy"
+               onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=f97316&color=fff'" />
+          <h3 class="font-semibold text-gray-800 text-sm">${escHtml(m.name)}</h3>
+          ${m.designation ? `<p class="text-xs text-gray-500 mt-1">${escHtml(m.designation)}</p>` : ''}
+          ${m.instagram ? `<a href="https://instagram.com/${m.instagram}" target="_blank" class="text-orange-500 text-xs mt-1 block hover:underline">@${escHtml(m.instagram)}</a>` : ''}
+        </div>`).join('');
+    }
+
+    async function loadTeam() {
+      const grid = document.getElementById('teamGrid');
+      try {
+        const res = await fetch(`${API_BASE_URL}/team`);
+        const data = await res.json();
+        if (data.success && data.data.length) {
+          renderMembers(data.data);
+        } else {
+          grid.innerHTML = `<div class="col-span-full text-center py-16 text-gray-400">
+            <div class="text-5xl mb-4">📭</div>
+            <p class="text-lg font-medium">अद्याप कोणतेही सदस्य जोडलेले नाहीत</p>
+            <p class="text-sm mt-2">Admin पॅनेलमधून सदस्य जोडा</p>
+          </div>`;
+        }
+      } catch {
+        grid.innerHTML = `<div class="col-span-full text-center py-16 text-gray-400">
+          <div class="text-5xl mb-4">⚠️</div>
+          <p class="text-lg font-medium">टीम लोड करताना एरर आली</p>
+          <button onclick="loadTeam()" class="mt-4 bg-orange-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-orange-600 transition">🔄 पुन्हा प्रयत्न करा</button>
+        </div>`;
+      }
+    }
+
+    loadTeam();
+  </script>
+</body>
+
+</html>
