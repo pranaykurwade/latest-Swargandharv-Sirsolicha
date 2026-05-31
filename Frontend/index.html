@@ -1169,7 +1169,10 @@
         name: 'स्वरगंधर्व सिरसोलीचा',
         description: isTest ? '🧪 TEST PAYMENT — ₹1 only' : 'एकल गीत गायन स्पर्धा 2025 नोंदणी',
         order_id: orderId,
-        prefill: { name, contact: phone },
+        prefill: {
+          name,
+          contact: phone.startsWith('+') ? phone : '+91' + phone,
+        },
         theme: { color: '#f97316' },
         handler: async function (response) {
           try {
