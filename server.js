@@ -380,16 +380,21 @@ app.post('/api/registration/:id/refund', async (req, res) => {
     const registration = await Registration.findOne({ registrationId: req.params.id });
     if (!registration) return res.status(404).json({ success: false, message: 'Registration not found' });
 
-    if (!registration.payment.razorpayPaymentId) {
-      return res.status(400).json({ success: false, message: 'No payment found to refund' });
+    const paymentId = registration.payment?.razorpayPaymentId;
+    const paymentAmount = registration.payment?.amount;
+
+    if (!paymentId) {
+      return res.status(400).json({ success: false, message: 'या नोंदणीसाठी Razorpay payment ID नाही. Manual payment असल्यास refund manually करा.' });
     }
-    if (registration.payment.status === 'refunded') {
-      return res.status(400).json({ success: false, message: 'Already refunded' });
+    if (registration.payment?.status === 'refunded') {
+      return res.status(400).json({ success: false, message: 'हा परतावा आधीच दिला गेला आहे.' });
+    }
+    if (!paymentAmount || paymentAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'Payment amount invalid for refund.' });
     }
 
-    // Initiate refund via Razorpay
-    const refund = await razorpay.payments.refund(registration.payment.razorpayPaymentId, {
-      amount: registration.payment.amount, // full refund in paise
+    const refund = await razorpay.payments.refund(paymentId, {
+      amount: paymentAmount,
       notes: { reason: notes || 'Admin initiated refund', registrationId: req.params.id },
     });
 
@@ -410,7 +415,8 @@ app.post('/api/registration/:id/refund', async (req, res) => {
     res.json({ success: true, data: { refundId: refund.id, status: refund.status, amount: refund.amount } });
   } catch (error) {
     console.error('Refund error:', error);
-    res.status(500).json({ success: false, message: error.message });
+    const msg = error.error?.description || error.message || 'Refund failed';
+    res.status(500).json({ success: false, message: msg });
   }
 });
 
