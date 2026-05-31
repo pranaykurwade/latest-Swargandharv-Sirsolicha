@@ -13,7 +13,14 @@
       font-family: "Hind", sans-serif;
     }
 
-    /* Only keep utility classes for animation and spinner, rest handled by Tailwind */
+    .gradient-bg {
+      background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);
+    }
+
+    .card-shadow {
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
     .success-animation {
       animation: slideInUp 0.5s ease-out;
     }
@@ -69,9 +76,21 @@
       }
     }
 
-    .gallery-modal-img {
-      max-height: 80vh;
-      object-fit: contain;
+    .admin-panel {
+      display: none;
+    }
+
+    .admin-panel.active {
+      display: block;
+    }
+
+    .stats-card {
+      background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);
+      color: white;
+    }
+
+    .hero-pattern {
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     }
 
     .floating-animation {
@@ -90,6 +109,22 @@
       }
     }
 
+    .section-fade {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .section-fade.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .nav-btn {
+      transition: all 0.2s;
+    }
+
+    /* Toast */
     .toast {
       animation: slideInRight 0.3s ease;
     }
@@ -103,6 +138,81 @@
       to {
         transform: translateX(0);
         opacity: 1;
+      }
+    }
+
+    /* Admin tabs */
+    .admin-tab {
+      cursor: pointer;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .admin-tab.active {
+      background: linear-gradient(135deg, #f97316, #dc2626);
+      color: white;
+    }
+
+    .admin-tab-content {
+      display: none;
+    }
+
+    .admin-tab-content.active {
+      display: block;
+    }
+
+    /* Gallery modal */
+    .gallery-modal-img {
+      max-height: 80vh;
+      object-fit: contain;
+    }
+
+    /* Responsive nav */
+    @media (max-width: 768px) {
+      .nav-scroll {
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        justify-content: flex-start !important;
+      }
+
+      .nav-scroll::-webkit-scrollbar {
+        display: none;
+      }
+
+      /* Admin dashboard full screen on mobile */
+      #adminDashboardModal>div {
+        border-radius: 0 !important;
+      }
+
+      /* Admin tabs scroll on mobile */
+      #adminDashboardModal .flex.flex-wrap.gap-2 {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 4px;
+      }
+
+      #adminDashboardModal .flex.flex-wrap.gap-2::-webkit-scrollbar {
+        display: none;
+      }
+
+      /* Compact table on mobile */
+      table {
+        font-size: 0.7rem;
+      }
+
+      table td,
+      table th {
+        padding: 0.35rem 0.4rem !important;
+      }
+
+      /* Toast full width on mobile */
+      #messageContainer {
+        left: 1rem;
+        right: 1rem;
+        max-width: none;
       }
     }
   </style>
