@@ -392,6 +392,9 @@ app.post('/api/registration/:id/refund', async (req, res) => {
     if (!paymentAmount || paymentAmount <= 0) {
       return res.status(400).json({ success: false, message: 'Payment amount invalid for refund.' });
     }
+    if (paymentAmount < 100) {
+      return res.status(400).json({ success: false, message: `Payment amount ₹${paymentAmount / 100} is too small to refund via API. Please refund manually from Razorpay Dashboard.` });
+    }
 
     const refund = await razorpay.payments.refund(paymentId, {
       amount: paymentAmount,
@@ -414,8 +417,8 @@ app.post('/api/registration/:id/refund', async (req, res) => {
 
     res.json({ success: true, data: { refundId: refund.id, status: refund.status, amount: refund.amount } });
   } catch (error) {
-    console.error('Refund error:', error);
-    const msg = error.error?.description || error.message || 'Refund failed';
+    console.error('Refund error full:', JSON.stringify(error));
+    const msg = error?.error?.description || error?.message || 'Refund failed';
     res.status(500).json({ success: false, message: msg });
   }
 });
