@@ -697,6 +697,31 @@
                 </div>
               </div>
 
+              <!-- TEST MODE (Admin only) -->
+              <div class="border border-yellow-300 rounded-xl overflow-hidden">
+                <div class="bg-yellow-50 px-4 py-3 border-b border-yellow-200 flex items-center gap-2">
+                  <span class="text-lg">🧪</span>
+                  <div>
+                    <p class="font-semibold text-gray-800 text-sm">Test Mode (Admin Only)</p>
+                    <p class="text-xs text-gray-500">सक्रिय केल्यावर नोंदणी फॉर्ममध्ये ₹1 payment होईल — testing साठी
+                    </p>
+                  </div>
+                </div>
+                <div class="p-4">
+                  <label class="flex items-center gap-3 cursor-pointer select-none">
+                    <input type="checkbox" id="testModeToggle" onchange="toggleTestMode(this)"
+                      class="w-5 h-5 accent-orange-500" />
+                    <div>
+                      <p class="text-sm font-medium text-gray-700">Test Mode सक्रिय करा</p>
+                      <p class="text-xs text-gray-400">चालू असताना सर्व payments ₹1 मध्ये होतील</p>
+                    </div>
+                    <span id="testModeLabel"
+                      class="hidden ml-auto bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full">TEST
+                      ON</span>
+                  </label>
+                </div>
+              </div>
+
               <button onclick="saveAllSettings()"
                 class="w-full text-white py-3 rounded-xl font-semibold transition text-base"
                 style="background: linear-gradient(135deg, #f97316, #dc2626);">
@@ -810,15 +835,11 @@
             <p class="font-semibold text-orange-700 mb-2">💳 ऑनलाइन पेमेंट (Razorpay)</p>
             <p>नोंदणी फॉर्म सबमिट केल्यावर Razorpay पेमेंट विंडो उघडेल. पेमेंट यशस्वी झाल्यावर नोंदणी पूर्ण होईल.</p>
             <p class="mt-1">• बाल वर्ग: ₹201 &nbsp;|&nbsp; महिला/पुरुष वर्ग: ₹301</p>
-            <!-- TEST MODE TOGGLE — remove before going live -->
-            <div class="mt-3 pt-3 border-t border-orange-200 flex items-center gap-3">
-              <label class="flex items-center gap-2 cursor-pointer select-none">
-                <input type="checkbox" id="testModeToggle" onchange="toggleTestMode(this)"
-                  class="w-4 h-4 accent-orange-500" />
-                <span class="text-orange-700 font-medium text-xs">🧪 Test Mode (₹1 payment — for testing only)</span>
-              </label>
-              <span id="testModeLabel"
-                class="hidden text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-semibold">TEST</span>
+            <!-- Admin test mode indicator — shown only when admin enables test mode -->
+            <div id="testModeBanner"
+              class="hidden mt-2 bg-yellow-100 border border-yellow-300 rounded-lg px-3 py-2 flex items-center gap-2">
+              <span class="text-yellow-700 text-xs font-semibold">🧪 Test Mode चालू आहे — ₹1 payment होईल</span>
+              <span class="text-xs text-yellow-600">(Admin द्वारे सक्रिय)</span>
             </div>
           </div>
           <div class="text-center pt-2">
@@ -1113,7 +1134,10 @@
         const { registrationId, orderId, amount, currency, keyId } = result.data;
         openRazorpay({ registrationId, orderId, amount, currency, keyId, name: data.fullName, phone: data.phone, isTest });
         form.reset();
-        if (isTest) { document.getElementById('testModeToggle').checked = false; toggleTestMode({ checked: false }); }
+        if (isTest) {
+          const toggle = document.getElementById('testModeToggle');
+          if (toggle) { toggle.checked = false; toggleTestMode({ checked: false }); }
+        }
       } catch (err) {
         showMessage(err.message, 'error');
         form.classList.add('error-shake');
@@ -1125,11 +1149,15 @@
 
     function toggleTestMode(cb) {
       const label = document.getElementById('testModeLabel');
+      const banner = document.getElementById('testModeBanner');
       if (cb.checked) {
         label.classList.remove('hidden');
-        showMessage('🧪 Test Mode ON — ₹1 payment होईल', 'warning');
+        if (banner) banner.classList.remove('hidden');
+        showMessage('🧪 Test Mode ON — नोंदणी फॉर्ममध्ये ₹1 payment होईल', 'warning');
       } else {
         label.classList.add('hidden');
+        if (banner) banner.classList.add('hidden');
+        showMessage('Test Mode बंद केला', 'info');
       }
     }
 
