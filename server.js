@@ -7,40 +7,11 @@ const cors = require('cors');
 const crypto = require('crypto');
 const Razorpay = require('razorpay');
 const nodemailer = require('nodemailer');
-const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-const isProduction = process.env.NODE_ENV === 'production';
-const googleCallbackUrl = isProduction
-  ? process.env.GOOGLE_CALLBACK_URL_LIVE || process.env.GOOGLE_CALLBACK_URL
-  : process.env.GOOGLE_CALLBACK_URL_LOCAL || process.env.GOOGLE_CALLBACK_URL;
-
-const frontendUrl = process.env.FRONTEND_URL || (isProduction ? 'https://swargandharv-sirsolicha-latest.netlify.app' : 'http://localhost:5500');
-
-function buildFrontendUrl(path = '/', params = {}) {
-  const baseUrl = frontendUrl.replace(/\/$/, '');
-  try {
-    const url = new URL(path, baseUrl);
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) url.searchParams.set(key, value);
-    });
-    return url.toString();
-  } catch (err) {
-    const query = Object.entries(params)
-      .filter(([, value]) => value !== undefined && value !== null)
-      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
-      .join('&');
-    return `${baseUrl}${path}${query ? `?${query}` : ''}`;
-  }
-}
-
-if (!googleCallbackUrl) {
-  console.warn('Google callback URL is not configured. Set GOOGLE_CALLBACK_URL_LOCAL and/or GOOGLE_CALLBACK_URL_LIVE in .env');
-}
 
 // Cloudinary configuration
 cloudinary.config({
@@ -55,14 +26,6 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// Nodemailer configuration for sending emails
-const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI)
@@ -103,61 +66,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
-app.use(passport.initialize());
 
-passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: googleCallbackUrl,
-}, (accessToken, refreshToken, profile, done) => {
-  const user = {
-    googleId: profile.id,
-    googleName: profile.displayName,
-    email: profile.emails?.[0]?.value,
-    firstName: profile.name?.givenName,
-    lastName: profile.name?.familyName,
-    photo: profile.photos?.[0]?.value,
-  };
-  done(null, user);
-}));
-
-app.get('/auth/google', passport.authenticate('google', {
-  scope: ['profile', 'email'],
-  session: false,
-}));
-
-app.get('/auth/google/callback',
-  passport.authenticate('google', {
-    failureRedirect: buildFrontendUrl('/auth/google/failure'),
-    session: false,
-  }),
-  (req, res) => {
-    const user = req.user || {};
-    const redirectUrl = buildFrontendUrl('/auth/google/success', {
-      googleId: user.googleId,
-      googleName: user.googleName,
-      email: user.email,
-      photo: user.photo,
-    });
-    res.redirect(redirectUrl);
-  }
-);
-
-app.get('/auth/google/failure', (req, res) => {
-  res.redirect(buildFrontendUrl('/auth/google/failure'));
-});
-
-// Debug route to inspect OAuth runtime values (safe to expose locally)
-app.get('/debug/oauth', (req, res) => {
-  const clientId = process.env.GOOGLE_CLIENT_ID || '';
-  const maskedClientId = clientId ? clientId.replace(/(.{4}).+(.{4})/, '$1...$2') : '';
-  res.json({
-    googleCallbackUrl: googleCallbackUrl || null,
-    googleClientIdMasked: maskedClientId,
-    frontendUrl: frontendUrl || null,
-    nodeEnv: process.env.NODE_ENV || 'development',
-  });
-});
 
 // ─── SCHEMAS ────────────────────────────────────────────────────────────────
 
