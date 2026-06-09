@@ -7,6 +7,8 @@
   <title>स्वरगंधर्व सिरसोलीचा - एकल गीत गायन स्पर्धा 2025</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <!-- Google Identity Services — replace YOUR_GOOGLE_CLIENT_ID with actual client ID -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link href="https://fonts.googleapis.com/css2?family=Hind:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     * {
@@ -823,6 +825,22 @@
         <p class="text-xl text-gray-600">खालील माहिती भरून तुमची नोंदणी पूर्ण करा</p>
       </div>
       <div class="bg-white rounded-2xl card-shadow p-8">
+        <!-- Google Sign-In -->
+        <div id="googleSignInSection" class="mb-6 pb-6 border-b border-gray-100">
+          <p class="text-sm text-gray-500 text-center mb-3">फॉर्म लवकर भरण्यासाठी Google खाते वापरा</p>
+          <div id="googleBtn" class="flex justify-center"></div>
+          <div id="googleUserInfo"
+            class="hidden mt-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <img id="googleAvatar" src="" alt="" class="w-8 h-8 rounded-full" />
+              <div>
+                <p id="googleName" class="text-sm font-semibold text-gray-800"></p>
+                <p id="googleEmail" class="text-xs text-gray-500"></p>
+              </div>
+            </div>
+            <button onclick="googleSignOut()" class="text-xs text-red-500 hover:text-red-700 underline">बदला</button>
+          </div>
+        </div>
         <form id="registrationForm" class="space-y-6" novalidate>
           <!-- Row 1: Name, Age, Phone -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1077,6 +1095,8 @@
 
     const API_BASE_URL = 'https://latest-swargandharv-sirsolicha.onrender.com/api';
     const ADMIN_PASSWORD = 'pranay4942';
+    // Replace with your Google OAuth Client ID from console.cloud.google.com
+    const GOOGLE_CLIENT_ID = '605791844409-mpsrt29109i9kjejhlop4lbh2g7h0qjr.apps.googleusercontent.com';
 
     // ─── STATE ───────────────────────────────────────────────────────────────────
     let allRegistrations = [];
@@ -2122,6 +2142,62 @@
       form.reset();
       form.querySelector('[name="timelineId"]').value = '';
     }
+
+    // ─── GOOGLE SIGN-IN ───────────────────────────────────────────────────────────
+    function initGoogleSignIn() {
+      if (typeof google === 'undefined' || !GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.includes('YOUR_GOOGLE')) return;
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredential,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      });
+      google.accounts.id.renderButton(
+        document.getElementById('googleBtn'),
+        { theme: 'outline', size: 'large', text: 'signin_with', shape: 'rectangular', width: 300 }
+      );
+    }
+
+    function handleGoogleCredential(response) {
+      try {
+        // Decode JWT payload (no verification needed — just for autofill)
+        const base64 = response.credential.split('.')[1];
+        const payload = JSON.parse(atob(base64.replace(/-/g, '+').replace(/_/g, '/')));
+        const { name, email, picture } = payload;
+
+        // Show user info
+        document.getElementById('googleAvatar').src = picture || '';
+        document.getElementById('googleName').textContent = name || '';
+        document.getElementById('googleEmail').textContent = email || '';
+        document.getElementById('googleUserInfo').classList.remove('hidden');
+        document.getElementById('googleBtn').classList.add('hidden');
+
+        // Autofill form
+        const form = document.getElementById('registrationForm');
+        if (name) {
+          const nameInput = form.querySelector('[name="fullName"]');
+          if (nameInput && !nameInput.value) nameInput.value = name;
+        }
+
+        showMessage('✅ Google खाते जोडले! माहिती आपोआप भरली गेली.', 'success');
+      } catch (e) {
+        console.error('Google credential error:', e);
+      }
+    }
+
+    function googleSignOut() {
+      if (typeof google !== 'undefined') google.accounts.id.disableAutoSelect();
+      document.getElementById('googleUserInfo').classList.add('hidden');
+      document.getElementById('googleBtn').classList.remove('hidden');
+      // Clear autofilled name
+      const form = document.getElementById('registrationForm');
+      if (form) form.querySelector('[name="fullName"]').value = '';
+    }
+
+    // Initialize Google Sign-In after GSI script loads
+    window.addEventListener('load', () => {
+      setTimeout(initGoogleSignIn, 500);
+    });
   </script>
 </body>
 

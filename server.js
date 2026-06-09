@@ -6,10 +6,41 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cors = require('cors');
 const crypto = require('crypto');
 const Razorpay = require('razorpay');
+const nodemailer = require('nodemailer');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+const isProduction = process.env.NODE_ENV === 'production';
+const googleCallbackUrl = isProduction
+  ? process.env.GOOGLE_CALLBACK_URL_LIVE || process.env.GOOGLE_CALLBACK_URL
+  : process.env.GOOGLE_CALLBACK_URL_LOCAL || process.env.GOOGLE_CALLBACK_URL;
+
+const frontendUrl = process.env.FRONTEND_URL || (isProduction ? 'https://swargandharv-sirsolicha-latest.netlify.app' : 'http://localhost:5500');
+
+function buildFrontendUrl(path = '/', params = {}) {
+  const baseUrl = frontendUrl.replace(/\/$/, '');
+  try {
+    const url = new URL(path, baseUrl);
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) url.searchParams.set(key, value);
+    });
+    return url.toString();
+  } catch (err) {
+    const query = Object.entries(params)
+      .filter(([, value]) => value !== undefined && value !== null)
+      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+      .join('&');
+    return `${baseUrl}${path}${query ? `?${query}` : ''}`;
+  }
+}
+
+if (!googleCallbackUrl) {
+  console.warn('Google callback URL is not configured. Set GOOGLE_CALLBACK_URL_LOCAL and/or GOOGLE_CALLBACK_URL_LIVE in .env');
+}
 
 // Cloudinary configuration
 cloudinary.config({
@@ -24,32 +55,39 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+// Nodemailer configuration for sending emails
+const transporter = nodemailer.createTransport({
+  service: process.env.EMAIL_SERVICE || 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD,
+  },
+});
+
 // MongoDB connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(async () => {
-  console.log('Connected to MongoDB');
-  // Drop legacy indexes that no longer exist in schema
-  try {
-    const db = mongoose.connection.db;
-    const col = db.collection('registrations');
-    const indexes = await col.indexes();
-    const legacyIndexes = [
-      'paymentScreenshot.filename_1',
-      'paymentScreenshot.transactionId_1',
-      'email_1',
-    ];
-    for (const idxName of legacyIndexes) {
-      if (indexes.find(i => i.name === idxName)) {
-        await col.dropIndex(idxName);
-        console.log(`Dropped legacy index: ${idxName}`);
+mongoose.connect(process.env.MONGODB_URI)
+  .then(async () => {
+    console.log('Connected to MongoDB');
+    // Drop legacy indexes that no longer exist in schema
+    try {
+      const db = mongoose.connection.db;
+      const col = db.collection('registrations');
+      const indexes = await col.indexes();
+      const legacyIndexes = [
+        'paymentScreenshot.filename_1',
+        'paymentScreenshot.transactionId_1',
+        'email_1',
+      ];
+      for (const idxName of legacyIndexes) {
+        if (indexes.find(i => i.name === idxName)) {
+          await col.dropIndex(idxName);
+          console.log(`Dropped legacy index: ${idxName}`);
+        }
       }
+    } catch (e) {
+      console.log('Index cleanup note:', e.message);
     }
-  } catch (e) {
-    console.log('Index cleanup note:', e.message);
-  }
-})
+  })
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Middleware
@@ -60,11 +98,66 @@ app.use(cors({
     'http://localhost:3000',
     /\.netlify\.app$/,      // any Netlify subdomain
     /\.onrender\.com$/,     // Render itself
-    process.env.FRONTEND_URL, // your custom domain if any
+    process.env.FRONTEND_URL,
   ].filter(Boolean),
   credentials: true,
 }));
 app.use(express.json());
+app.use(passport.initialize());
+
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: googleCallbackUrl,
+}, (accessToken, refreshToken, profile, done) => {
+  const user = {
+    googleId: profile.id,
+    googleName: profile.displayName,
+    email: profile.emails?.[0]?.value,
+    firstName: profile.name?.givenName,
+    lastName: profile.name?.familyName,
+    photo: profile.photos?.[0]?.value,
+  };
+  done(null, user);
+}));
+
+app.get('/auth/google', passport.authenticate('google', {
+  scope: ['profile', 'email'],
+  session: false,
+}));
+
+app.get('/auth/google/callback',
+  passport.authenticate('google', {
+    failureRedirect: buildFrontendUrl('/auth/google/failure'),
+    session: false,
+  }),
+  (req, res) => {
+    const user = req.user || {};
+    const redirectUrl = buildFrontendUrl('/auth/google/success', {
+      googleId: user.googleId,
+      googleName: user.googleName,
+      email: user.email,
+      photo: user.photo,
+    });
+    res.redirect(redirectUrl);
+  }
+);
+
+app.get('/auth/google/failure', (req, res) => {
+  res.redirect(buildFrontendUrl('/auth/google/failure'));
+});
+
+// Debug route to inspect OAuth runtime values (safe to expose locally)
+app.get('/debug/oauth', (req, res) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID || '';
+  const maskedClientId = clientId ? clientId.replace(/(.{4}).+(.{4})/, '$1...$2') : '';
+  res.json({
+    googleCallbackUrl: googleCallbackUrl || null,
+    googleClientIdMasked: maskedClientId,
+    frontendUrl: frontendUrl || null,
+    nodeEnv: process.env.NODE_ENV || 'development',
+  });
+});
 
 // ─── SCHEMAS ────────────────────────────────────────────────────────────────
 
@@ -73,6 +166,9 @@ const registrationSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   age: { type: Number, required: true },
   phone: { type: String, required: true, unique: true },
+  email: { type: String, required: true },
+  googleId: { type: String },
+  googleName: { type: String },
   category: { type: String, required: true },
   songType: { type: String, required: true },
   songTitle: { type: String },
@@ -90,6 +186,8 @@ const registrationSchema = new mongoose.Schema({
     refundedAt: { type: Date },
     refundNotes: { type: String },
   },
+  emailSent: { type: Boolean, default: false },
+  emailSentAt: { type: Date },
   status: { type: String, default: 'pending' }, // pending, approved, rejected, cancelled, refunded
   cancelledAt: { type: Date },
   cancelledBy: { type: String },
@@ -185,9 +283,9 @@ function getRegistrationFee(category) {
 // POST /api/register  (no file upload — Razorpay handles payment)
 app.post('/api/register', async (req, res) => {
   try {
-    const { fullName, age, phone, category, songType, songTitle } = req.body;
+    const { fullName, age, phone, email, googleId, googleName, category, songType, songTitle } = req.body;
 
-    if (!fullName || !age || !phone || !category || !songType) {
+    if (!fullName || !age || !phone || !email || !category || !songType) {
       return res.status(400).json({ success: false, message: 'सर्व आवश्यक माहिती भरा' });
     }
 
@@ -204,7 +302,7 @@ app.post('/api/register', async (req, res) => {
       amount,
       currency: 'INR',
       receipt: registrationId,
-      notes: { registrationId, fullName, phone },
+      notes: { registrationId, fullName, phone, email },
     });
 
     const registration = new Registration({
@@ -212,6 +310,9 @@ app.post('/api/register', async (req, res) => {
       fullName,
       age: parseInt(age),
       phone,
+      email,
+      googleId: googleId || null,
+      googleName: googleName || null,
       category,
       songType,
       songTitle: songTitle || '',
@@ -327,10 +428,102 @@ async function approveRegistrationByOrderId(orderId, paymentId, signature) {
   );
   if (result) {
     console.log('Registration approved:', result.registrationId);
+    await sendEmailNotification(result);
   } else {
     console.warn('No registration found for orderId:', orderId);
   }
   return result;
+}
+
+async function sendEmailNotification(registration) {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    console.warn('Email configuration not complete; skipping email notification');
+    return;
+  }
+
+  if (!registration.email) {
+    console.warn('No email available for registration', registration.registrationId);
+    return;
+  }
+
+  const mailOptions = {
+    from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_USER}>`,
+    to: registration.email,
+    subject: `🎉 नोंदणी यशस्वी! - आयडी: ${registration.registrationId}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb; border-radius: 12px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <div style="font-size: 48px; margin-bottom: 10px;">🎉</div>
+          <h1 style="color: #1f2937; margin: 0; font-size: 28px;">नोंदणी यशस्वी झाली!</h1>
+        </div>
+        
+        <div style="background-color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #fb923c;">
+          <p style="color: #666; margin: 0 0 15px 0; font-size: 16px;">नमस्कार ${registration.fullName},</p>
+          <p style="color: #666; margin: 0 0 15px 0; font-size: 16px;">तुमची नोंदणी स्वरगंधर्व सिरसोलीचा स्पर्धेसाठी यशस्वी झाली आहे!</p>
+          
+          <div style="background-color: #fff7ed; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f97316;">
+            <p style="color: #c2410b; margin: 0 0 10px 0; font-weight: bold; font-size: 14px;">तुमचा नोंदणी आयडी:</p>
+            <p style="color: #c2410b; margin: 0; font-size: 32px; font-weight: bold; letter-spacing: 2px; text-align: center;">${registration.registrationId}</p>
+          </div>
+          
+          <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #1f2937; margin: 0 0 12px 0; font-size: 16px;">📋 नोंदणी तपशील:</h3>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr>
+                <td style="padding: 6px 0; color: #666;"><strong>नाव:</strong></td>
+                <td style="padding: 6px 0; color: #1f2937;">${registration.fullName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #666;"><strong>वय:</strong></td>
+                <td style="padding: 6px 0; color: #1f2937;">${registration.age} वर्षे</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #666;"><strong>वर्ग:</strong></td>
+                <td style="padding: 6px 0; color: #1f2937;">${registration.category} वर्ग</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #666;"><strong>गीताचे प्रकार:</strong></td>
+                <td style="padding: 6px 0; color: #1f2937;">${registration.songType}</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #666;"><strong>रक्कम:</strong></td>
+                <td style="padding: 6px 0; color: #1f2937;">₹${(registration.payment.amount || 0) / 100}</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #666;"><strong>पेमेंट स्थिती:</strong></td>
+                <td style="padding: 6px 0; color: #16a34a;">✅ पेमेंट झाले</td>
+              </tr>
+            </table>
+          </div>
+          
+          <div style="background-color: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+            <h3 style="color: #991b1b; margin: 0 0 10px 0; font-size: 14px;">⚠️ महत्त्वाची माहिती:</h3>
+            <ul style="color: #7f1d1d; margin: 0; padding-left: 20px; font-size: 13px;">
+              <li style="margin: 5px 0;">स्पर्धेच्या दिवशी हा आयडी सोबत आणा</li>
+              <li style="margin: 5px 0;">या ईमेलला महत्त्व द्या</li>
+              <li style="margin: 5px 0;">कोणत्याही प्रश्नासाठी आमच्याशी संपर्क साधा</li>
+            </ul>
+          </div>
+        </div>
+        
+        <div style="text-align: center; color: #666; font-size: 12px; margin-top: 20px; border-top: 1px solid #e5e7eb; padding-top: 15px;">
+          <p style="margin: 0;">स्वरगंधर्व सिरसोलीचा</p>
+          <p style="margin: 0;">एकल गीत गायन स्पर्धा 2025</p>
+        </div>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    await Registration.findOneAndUpdate(
+      { registrationId: registration.registrationId },
+      { emailSent: true, emailSentAt: new Date() }
+    );
+    console.log('Email sent successfully to', registration.email);
+  } catch (err) {
+    console.error('Failed to send email:', err.message || err);
+  }
 }
 
 // GET /api/registration/:id
@@ -338,6 +531,17 @@ app.get('/api/registration/:id', async (req, res) => {
   try {
     const registration = await Registration.findOne({ registrationId: req.params.id });
     if (!registration) return res.status(404).json({ success: false, message: 'Registration not found' });
+    res.json({ success: true, data: registration });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/registration/email/:email  — lookup registration by email
+app.get('/api/registration/email/:email', async (req, res) => {
+  try {
+    const registration = await Registration.findOne({ email: req.params.email });
+    if (!registration) return res.status(404).json({ success: false, message: 'Registration not found with this email' });
     res.json({ success: true, data: registration });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
