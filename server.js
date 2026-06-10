@@ -152,7 +152,7 @@ const registrationSchema = new mongoose.Schema({
 
   phone: { type: String, required: true, unique: true },
 
-  email: { type: String },
+  email: { type: String, required: true },
 
   googleId: { type: String },
 
@@ -390,9 +390,9 @@ app.post('/api/register', async (req, res) => {
 
 
 
-    if (!fullName || !age || !phone || !category || !songType) {
+    if (!fullName || !age || !phone || !email || !category || !songType) {
 
-      return res.status(400).json({ success: false, message: 'सर्व आवश्यक माहिती भरा' });
+      return res.status(400).json({ success: false, message: 'सर्व आवश्यक माहिती भरा. Google खाते जोडणे आवश्यक आहे.' });
 
     }
 

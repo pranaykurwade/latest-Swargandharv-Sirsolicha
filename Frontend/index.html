@@ -1174,6 +1174,13 @@
       const form = document.getElementById('registrationForm');
       if (!form.checkValidity()) { form.reportValidity(); return; }
 
+      // Require Google Sign-In for email confirmation
+      if (!window._googleEmail) {
+        showMessage('📧 नोंदणी करण्यापूर्वी Google खाते जोडा — पुष्टीकरण ईमेल मिळण्यासाठी आवश्यक आहे', 'error');
+        document.getElementById('googleBtn').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
       const btn = document.getElementById('submitBtn');
       const txt = document.getElementById('submitText');
       const spin = document.getElementById('submitSpinner');
