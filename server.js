@@ -713,18 +713,17 @@ async function sendEmailNotification(registration) {
 
 
   const transporter = nodemailer.createTransport({
-
     service: 'gmail',
-
     auth: {
-
       user: process.env.EMAIL_USER,
-
       pass: process.env.EMAIL_PASSWORD,
-
     },
-
   });
+
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    console.warn('EMAIL_USER or EMAIL_PASSWORD not set — skipping email for', registration.email);
+    return;
+  }
 
 
 
