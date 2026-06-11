@@ -159,10 +159,6 @@ const registrationSchema = new mongoose.Schema({
 
   email: { type: String, required: true },
 
-  googleId: { type: String },
-
-  googleName: { type: String },
-
   category: { type: String, required: true },
 
   songType: { type: String, required: true },
@@ -391,7 +387,7 @@ app.post('/api/register', async (req, res) => {
 
   try {
 
-    const { fullName, age, phone, email, googleId, googleName, category, songType, songTitle } = req.body;
+    const { fullName, age, phone, email, category, songType, songTitle } = req.body;
 
 
 
@@ -415,7 +411,7 @@ app.post('/api/register', async (req, res) => {
 
     const registrationId = generateRegistrationId();
 
-    const amount = req.body.testMode ? 100 : getRegistrationFee(category) * 100; // 100 paise = ₹1 for test
+    const amount = getRegistrationFee(category) * 100;
 
 
 
@@ -446,10 +442,6 @@ app.post('/api/register', async (req, res) => {
       phone,
 
       email,
-
-      googleId: googleId || null,
-
-      googleName: googleName || null,
 
       category,
 
@@ -704,35 +696,83 @@ async function sendEmailNotification(registration) {
   const adminEmail = process.env.ADMIN_EMAIL || 'kurwadepranay@gmail.com';
   const senderEmail = process.env.EMAIL_FROM || 'kurwadepranay@gmail.com';
   const senderName = process.env.EMAIL_FROM_NAME || 'Swargandharv Sirsolicha';
-  const amount = (registration.payment?.amount || 0) / 100;
+  const amount = (registration.payment && registration.payment.amount) ? (registration.payment.amount / 100) : '';
 
-  // ── Email to Admin ──────────────────────────────────────────────────────
+  // ── User confirmation email (if email provided) ────────────────────────
+  if (registration.email) {
+    const userHtml = `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f9fafb;border-radius:12px;">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="font-size:48px;">🎉</div>
+        <h1 style="color:#1f2937;font-size:24px;margin:8px 0;">नोंदणी यशस्वी झाली!</h1>
+        <p style="color:#6b7280;font-size:14px;">स्वरगंधर्व सिरसोलीचा — एकल गीत गायन स्पर्धा 2025</p>
+      </div>
+      <div style="background:white;padding:20px;border-radius:10px;border:2px solid #fb923c;margin-bottom:16px;">
+        <p style="color:#555;font-size:15px;margin-bottom:12px;">नमस्कार <strong>${registration.fullName}</strong>,</p>
+        <p style="color:#555;font-size:14px;">तुमची स्वरगंधर्व सिरसोलीचा स्पर्धेसाठी नोंदणी यशस्वी झाली आहे!</p>
+        <div style="background:#fff7ed;padding:16px;border-radius:8px;border-left:4px solid #f97316;margin:16px 0;text-align:center;">
+          <p style="color:#c2410c;font-weight:bold;font-size:12px;margin:0 0 6px 0;letter-spacing:1px;">तुमचा नोंदणी आयडी</p>
+          <p style="color:#c2410c;font-size:32px;font-weight:bold;letter-spacing:4px;margin:0;">${registration.registrationId}</p>
+        </div>
+        <table style="width:100%;font-size:14px;border-collapse:collapse;margin-top:12px;">
+          <tr style="background:#f9fafb;"><td style="padding:8px 10px;color:#666;width:40%;">नाव</td><td style="padding:8px 10px;font-weight:600;">${registration.fullName}</td></tr>
+          <tr><td style="padding:8px 10px;color:#666;">फोन</td><td style="padding:8px 10px;">${registration.phone}</td></tr>
+          <tr style="background:#f9fafb;"><td style="padding:8px 10px;color:#666;">वर्ग</td><td style="padding:8px 10px;">${registration.category} वर्ग</td></tr>
+          <tr><td style="padding:8px 10px;color:#666;">गीत प्रकार</td><td style="padding:8px 10px;">${registration.songType}</td></tr>
+          ${amount ? `<tr style="background:#f9fafb;"><td style="padding:8px 10px;color:#666;">भरलेली रक्कम</td><td style="padding:8px 10px;font-weight:bold;color:#16a34a;">₹${amount}</td></tr>` : ''}
+          <tr><td style="padding:8px 10px;color:#666;">पेमेंट स्थिती</td><td style="padding:8px 10px;color:#16a34a;font-weight:bold;">✅ पेमेंट झाले</td></tr>
+        </table>
+      </div>
+      <div style="background:#fef2f2;padding:14px;border-radius:8px;border-left:4px solid #dc2626;margin-bottom:16px;">
+        <p style="color:#991b1b;font-size:13px;font-weight:bold;margin:0 0 8px;">⚠️ महत्त्वाची माहिती:</p>
+        <ul style="color:#7f1d1d;font-size:13px;margin:0;padding-left:18px;line-height:1.8;">
+          <li>स्पर्धेच्या दिवशी हा नोंदणी आयडी सोबत आणा</li>
+          <li>स्पर्धा: 22 ऑक्टोबर 2025, दुपारी 12:00 वाजता</li>
+          <li>ठिकाण: सिरसोली, जिल्हा वर्धा, महाराष्ट्र</li>
+          <li>कोणत्याही प्रश्नासाठी संपर्क: +91 91586 68676</li>
+        </ul>
+      </div>
+      <p style="text-align:center;color:#9ca3af;font-size:12px;">स्वरगंधर्व सिरसोलीचा | सिरसोली, वर्धा, महाराष्ट्र</p>
+    </div>`;
+
+    try {
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: { 'accept': 'application/json', 'api-key': process.env.BREVO_API_KEY, 'content-type': 'application/json' },
+        body: JSON.stringify({
+          sender: { name: senderName, email: senderEmail },
+          to: [{ email: registration.email, name: registration.fullName }],
+          subject: `🎉 नोंदणी यशस्वी! आयडी: ${registration.registrationId} — स्वरगंधर्व सिरसोलीचा`,
+          htmlContent: userHtml,
+        }),
+      });
+      const result = await res.json();
+      if (res.ok) console.log('User confirmation email sent to', registration.email, '| ID:', result.messageId);
+      else console.error('Brevo user email failed:', JSON.stringify(result));
+    } catch (err) { console.error('User email error:', err.message); }
+  }
+
+  // ── Admin notification email ───────────────────────────────────────────
   const adminHtml = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb;border-radius:12px;">
-      <h2 style="color:#1f2937;border-bottom:2px solid #f97316;padding-bottom:10px;">📋 नवीन नोंदणी आली!</h2>
-      <table style="width:100%;font-size:15px;border-collapse:collapse;">
-        <tr style="background:#fff7ed;"><td style="padding:8px 12px;font-weight:bold;color:#c2410c;width:40%;">नोंदणी आयडी</td><td style="padding:8px 12px;font-size:18px;font-weight:bold;color:#c2410c;">${registration.registrationId}</td></tr>
+      <h2 style="color:#1f2937;border-bottom:2px solid #f97316;padding-bottom:10px;">📋 नवीन नोंदणी!</h2>
+      <table style="width:100%;font-size:14px;border-collapse:collapse;">
+        <tr style="background:#fff7ed;"><td style="padding:8px 12px;font-weight:bold;color:#c2410c;width:40%;">नोंदणी आयडी</td><td style="padding:8px 12px;font-size:20px;font-weight:bold;color:#c2410c;">${registration.registrationId}</td></tr>
         <tr><td style="padding:8px 12px;color:#666;">नाव</td><td style="padding:8px 12px;">${registration.fullName}</td></tr>
         <tr style="background:#f9fafb;"><td style="padding:8px 12px;color:#666;">फोन</td><td style="padding:8px 12px;">${registration.phone}</td></tr>
-        <tr><td style="padding:8px 12px;color:#666;">वय</td><td style="padding:8px 12px;">${registration.age} वर्षे</td></tr>
-        <tr style="background:#f9fafb;"><td style="padding:8px 12px;color:#666;">वर्ग</td><td style="padding:8px 12px;">${registration.category}</td></tr>
-        <tr><td style="padding:8px 12px;color:#666;">गीत प्रकार</td><td style="padding:8px 12px;">${registration.songType}</td></tr>
-        <tr style="background:#f9fafb;"><td style="padding:8px 12px;color:#666;">रक्कम</td><td style="padding:8px 12px;font-weight:bold;color:#16a34a;">₹${amount}</td></tr>
-        <tr><td style="padding:8px 12px;color:#666;">पेमेंट</td><td style="padding:8px 12px;color:#16a34a;font-weight:bold;">✅ पेमेंट झाले</td></tr>
+        <tr><td style="padding:8px 12px;color:#666;">ईमेल</td><td style="padding:8px 12px;">${registration.email || '—'}</td></tr>
+        <tr style="background:#f9fafb;"><td style="padding:8px 12px;color:#666;">वय</td><td style="padding:8px 12px;">${registration.age} वर्षे</td></tr>
+        <tr><td style="padding:8px 12px;color:#666;">वर्ग</td><td style="padding:8px 12px;">${registration.category}</td></tr>
+        <tr style="background:#f9fafb;"><td style="padding:8px 12px;color:#666;">गीत प्रकार</td><td style="padding:8px 12px;">${registration.songType}</td></tr>
+        ${amount ? `<tr><td style="padding:8px 12px;color:#666;">रक्कम</td><td style="padding:8px 12px;font-weight:bold;color:#16a34a;">₹${amount}</td></tr>` : ''}
         <tr style="background:#f9fafb;"><td style="padding:8px 12px;color:#666;">दिनांक</td><td style="padding:8px 12px;">${new Date().toLocaleString('mr-IN')}</td></tr>
       </table>
     </div>`;
 
-  // ── Confirmation page HTML (shown on website, no email to user since no email field) ──
-  // Send only to admin
   try {
     const res = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
-      headers: {
-        'accept': 'application/json',
-        'api-key': process.env.BREVO_API_KEY,
-        'content-type': 'application/json',
-      },
+      headers: { 'accept': 'application/json', 'api-key': process.env.BREVO_API_KEY, 'content-type': 'application/json' },
       body: JSON.stringify({
         sender: { name: senderName, email: senderEmail },
         to: [{ email: adminEmail, name: 'Admin' }],
@@ -741,14 +781,9 @@ async function sendEmailNotification(registration) {
       }),
     });
     const result = await res.json();
-    if (res.ok) {
-      console.log('Admin email sent, messageId:', result.messageId);
-    } else {
-      console.error('Brevo admin email failed:', JSON.stringify(result));
-    }
-  } catch (err) {
-    console.error('Email send error:', err.message);
-  }
+    if (res.ok) console.log('Admin notification email sent | ID:', result.messageId);
+    else console.error('Brevo admin email failed:', JSON.stringify(result));
+  } catch (err) { console.error('Admin email error:', err.message); }
 }
 
 
