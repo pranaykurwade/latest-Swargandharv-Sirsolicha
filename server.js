@@ -14,7 +14,7 @@ const crypto = require('crypto');
 
 const Razorpay = require('razorpay');
 
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
 require('dotenv').config();
 
@@ -588,7 +588,7 @@ app.post('/api/webhook/razorpay', express.raw({ type: 'application/json' }), asy
 
         .createHmac('sha256', webhookSecret)
 
-        .update(req.body)
+        .update(Buffer.isBuffer(req.body) ? req.body : JSON.stringify(req.body))
 
         .digest('hex');
 
@@ -604,7 +604,7 @@ app.post('/api/webhook/razorpay', express.raw({ type: 'application/json' }), asy
 
 
 
-    const event = JSON.parse(req.body.toString());
+    const event = Buffer.isBuffer(req.body) ? JSON.parse(req.body.toString()) : req.body;
 
     console.log('Razorpay webhook event:', event.event);
 
@@ -712,24 +712,17 @@ async function sendEmailNotification(registration) {
 
 
 
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD,
-    },
-  });
-
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-    console.warn('EMAIL_USER or EMAIL_PASSWORD not set — skipping email for', registration.email);
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('RESEND_API_KEY not set — skipping email for', registration.email);
     return;
   }
+  const resend = new Resend(process.env.RESEND_API_KEY);
 
 
 
   const mailOptions = {
 
-    from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_USER}>`,
+    from: `${process.env.EMAIL_FROM_NAME || 'Swargandharv'} <onboarding@resend.dev>`,
 
     to: registration.email,
 
@@ -865,7 +858,7 @@ async function sendEmailNotification(registration) {
 
   try {
 
-    await transporter.sendMail(mailOptions);
+    await resend.emails.send(mailOptions);
 
     await Registration.findOneAndUpdate(
 
