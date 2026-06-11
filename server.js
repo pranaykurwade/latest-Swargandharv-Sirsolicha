@@ -119,9 +119,15 @@ app.use(cors({
 
     'http://localhost:3000',
 
-    /\.netlify\.app$/,      // any Netlify subdomain
+    /\.netlify\.app$/,       // Netlify
 
-    /\.onrender\.com$/,     // Render itself
+    /\.onrender\.com$/,      // Render
+
+    /\.github\.io$/,         // GitHub Pages
+
+    /\.vercel\.app$/,        // Vercel
+
+    /\.pages\.dev$/,         // Cloudflare Pages
 
     process.env.FRONTEND_URL,
 
