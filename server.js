@@ -14,7 +14,6 @@ const crypto = require('crypto');
 
 const Razorpay = require('razorpay');
 
-const { Resend } = require('resend');
 
 require('dotenv').config();
 
@@ -691,193 +690,60 @@ async function approveRegistrationByOrderId(orderId, paymentId, signature) {
 
 
 async function sendEmailNotification(registration) {
-
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-
-    console.warn('Email configuration not complete; skipping email notification');
-
-    return;
-
-  }
-
-
-
-  if (!registration.email) {
-
-    console.warn('No email available for registration', registration.registrationId);
-
-    return;
-
-  }
-
-
-
-  if (!process.env.RESEND_API_KEY) {
-    console.warn('RESEND_API_KEY not set — skipping email for', registration.email);
+  if (!process.env.BREVO_API_KEY) {
+    console.warn('BREVO_API_KEY not set — skipping email');
     return;
   }
-  const resend = new Resend(process.env.RESEND_API_KEY);
 
-
-
-  const mailOptions = {
-
-    from: `${process.env.EMAIL_FROM_NAME || 'Swargandharv'} <onboarding@resend.dev>`,
-
-    to: registration.email,
-
-    subject: `🎉 नोंदणी यशस्वी! - आयडी: ${registration.registrationId}`,
-
-    html: `
-
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb; border-radius: 12px;">
-
-        <div style="text-align: center; margin-bottom: 30px;">
-
-          <div style="font-size: 48px; margin-bottom: 10px;">🎉</div>
-
-          <h1 style="color: #1f2937; margin: 0; font-size: 28px;">नोंदणी यशस्वी झाली!</h1>
-
-        </div>
-
-        
-
-        <div style="background-color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #fb923c;">
-
-          <p style="color: #666; margin: 0 0 15px 0; font-size: 16px;">नमस्कार ${registration.fullName},</p>
-
-          <p style="color: #666; margin: 0 0 15px 0; font-size: 16px;">तुमची नोंदणी स्वरगंधर्व सिरसोलीचा स्पर्धेसाठी यशस्वी झाली आहे!</p>
-
-          
-
-          <div style="background-color: #fff7ed; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f97316;">
-
-            <p style="color: #c2410b; margin: 0 0 10px 0; font-weight: bold; font-size: 14px;">तुमचा नोंदणी आयडी:</p>
-
-            <p style="color: #c2410b; margin: 0; font-size: 32px; font-weight: bold; letter-spacing: 2px; text-align: center;">${registration.registrationId}</p>
-
-          </div>
-
-          
-
-          <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
-
-            <h3 style="color: #1f2937; margin: 0 0 12px 0; font-size: 16px;">📋 नोंदणी तपशील:</h3>
-
-            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-
-              <tr>
-
-                <td style="padding: 6px 0; color: #666;"><strong>नाव:</strong></td>
-
-                <td style="padding: 6px 0; color: #1f2937;">${registration.fullName}</td>
-
-              </tr>
-
-              <tr>
-
-                <td style="padding: 6px 0; color: #666;"><strong>वय:</strong></td>
-
-                <td style="padding: 6px 0; color: #1f2937;">${registration.age} वर्षे</td>
-
-              </tr>
-
-              <tr>
-
-                <td style="padding: 6px 0; color: #666;"><strong>वर्ग:</strong></td>
-
-                <td style="padding: 6px 0; color: #1f2937;">${registration.category} वर्ग</td>
-
-              </tr>
-
-              <tr>
-
-                <td style="padding: 6px 0; color: #666;"><strong>गीताचे प्रकार:</strong></td>
-
-                <td style="padding: 6px 0; color: #1f2937;">${registration.songType}</td>
-
-              </tr>
-
-              <tr>
-
-                <td style="padding: 6px 0; color: #666;"><strong>रक्कम:</strong></td>
-
-                <td style="padding: 6px 0; color: #1f2937;">₹${(registration.payment.amount || 0) / 100}</td>
-
-              </tr>
-
-              <tr>
-
-                <td style="padding: 6px 0; color: #666;"><strong>पेमेंट स्थिती:</strong></td>
-
-                <td style="padding: 6px 0; color: #16a34a;">✅ पेमेंट झाले</td>
-
-              </tr>
-
-            </table>
-
-          </div>
-
-          
-
-          <div style="background-color: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
-
-            <h3 style="color: #991b1b; margin: 0 0 10px 0; font-size: 14px;">⚠️ महत्त्वाची माहिती:</h3>
-
-            <ul style="color: #7f1d1d; margin: 0; padding-left: 20px; font-size: 13px;">
-
-              <li style="margin: 5px 0;">स्पर्धेच्या दिवशी हा आयडी सोबत आणा</li>
-
-              <li style="margin: 5px 0;">या ईमेलला महत्त्व द्या</li>
-
-              <li style="margin: 5px 0;">कोणत्याही प्रश्नासाठी आमच्याशी संपर्क साधा</li>
-
-            </ul>
-
-          </div>
-
-        </div>
-
-        
-
-        <div style="text-align: center; color: #666; font-size: 12px; margin-top: 20px; border-top: 1px solid #e5e7eb; padding-top: 15px;">
-
-          <p style="margin: 0;">स्वरगंधर्व सिरसोलीचा</p>
-
-          <p style="margin: 0;">एकल गीत गायन स्पर्धा 2025</p>
-
-        </div>
-
-      </div>
-
-    `,
-
-  };
-
-
-
+  const adminEmail = process.env.ADMIN_EMAIL || 'kurwadepranay@gmail.com';
+  const senderEmail = process.env.EMAIL_FROM || 'kurwadepranay@gmail.com';
+  const senderName = process.env.EMAIL_FROM_NAME || 'Swargandharv Sirsolicha';
+  const amount = (registration.payment?.amount || 0) / 100;
+
+  // ── Email to Admin ──────────────────────────────────────────────────────
+  const adminHtml = `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb;border-radius:12px;">
+      <h2 style="color:#1f2937;border-bottom:2px solid #f97316;padding-bottom:10px;">📋 नवीन नोंदणी आली!</h2>
+      <table style="width:100%;font-size:15px;border-collapse:collapse;">
+        <tr style="background:#fff7ed;"><td style="padding:8px 12px;font-weight:bold;color:#c2410c;width:40%;">नोंदणी आयडी</td><td style="padding:8px 12px;font-size:18px;font-weight:bold;color:#c2410c;">${registration.registrationId}</td></tr>
+        <tr><td style="padding:8px 12px;color:#666;">नाव</td><td style="padding:8px 12px;">${registration.fullName}</td></tr>
+        <tr style="background:#f9fafb;"><td style="padding:8px 12px;color:#666;">फोन</td><td style="padding:8px 12px;">${registration.phone}</td></tr>
+        <tr><td style="padding:8px 12px;color:#666;">वय</td><td style="padding:8px 12px;">${registration.age} वर्षे</td></tr>
+        <tr style="background:#f9fafb;"><td style="padding:8px 12px;color:#666;">वर्ग</td><td style="padding:8px 12px;">${registration.category}</td></tr>
+        <tr><td style="padding:8px 12px;color:#666;">गीत प्रकार</td><td style="padding:8px 12px;">${registration.songType}</td></tr>
+        <tr style="background:#f9fafb;"><td style="padding:8px 12px;color:#666;">रक्कम</td><td style="padding:8px 12px;font-weight:bold;color:#16a34a;">₹${amount}</td></tr>
+        <tr><td style="padding:8px 12px;color:#666;">पेमेंट</td><td style="padding:8px 12px;color:#16a34a;font-weight:bold;">✅ पेमेंट झाले</td></tr>
+        <tr style="background:#f9fafb;"><td style="padding:8px 12px;color:#666;">दिनांक</td><td style="padding:8px 12px;">${new Date().toLocaleString('mr-IN')}</td></tr>
+      </table>
+    </div>`;
+
+  // ── Confirmation page HTML (shown on website, no email to user since no email field) ──
+  // Send only to admin
   try {
-
-    await resend.emails.send(mailOptions);
-
-    await Registration.findOneAndUpdate(
-
-      { registrationId: registration.registrationId },
-
-      { emailSent: true, emailSentAt: new Date() }
-
-    );
-
-    console.log('Email sent successfully to', registration.email);
-
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': process.env.BREVO_API_KEY,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: { name: senderName, email: senderEmail },
+        to: [{ email: adminEmail, name: 'Admin' }],
+        subject: `📋 नवीन नोंदणी: ${registration.fullName} (${registration.registrationId})`,
+        htmlContent: adminHtml,
+      }),
+    });
+    const result = await res.json();
+    if (res.ok) {
+      console.log('Admin email sent, messageId:', result.messageId);
+    } else {
+      console.error('Brevo admin email failed:', JSON.stringify(result));
+    }
   } catch (err) {
-
-    console.error('Failed to send email:', err.message || err);
-
+    console.error('Email send error:', err.message);
   }
-
 }
-
 
 
 // GET /api/registration/:id
