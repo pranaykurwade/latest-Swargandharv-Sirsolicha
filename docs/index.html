@@ -823,81 +823,71 @@
         <p class="text-xl text-gray-600">खालील माहिती भरून तुमची नोंदणी पूर्ण करा</p>
       </div>
       <div class="bg-white rounded-2xl card-shadow p-8">
-
+        <form id="registrationForm" class="space-y-6" novalidate>
+          <!-- Row 1: Name, Age, Phone -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">पूर्ण नाव *</label>
+              <input type="text" name="fullName" required placeholder="तुमचे पूर्ण नाव"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent text-sm" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">वय *</label>
+              <input type="number" name="age" min="5" max="60" required placeholder="वय"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent text-sm" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">मोबाइल नंबर *</label>
+              <input type="tel" name="phone" pattern="[6-9][0-9]{9}" required placeholder="9876543210"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent text-sm" />
+            </div>
+          </div>
+          <!-- Row 2: Category, Song Type, Song Title -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">वर्ग *</label>
+              <select name="category" required
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent text-sm">
+                <option value="">वर्ग निवडा</option>
+                <option value="बाल">बाल वर्ग (15 वर्षाआतील) - ₹201</option>
+                <option value="महिला">महिला वर्ग (15+ वर्षे) - ₹301</option>
+                <option value="पुरुष">पुरुष वर्ग (15+ वर्षे) - ₹301</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">गीताचे प्रकार *</label>
+              <select name="songType" required
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent text-sm">
+                <option value="">प्रकार निवडा</option>
+                <option value="तुकडोजी महाराजांचे भजन">तुकडोजी महाराजांचे भजन</option>
+                <option value="अभंग">अभंग</option>
+                <option value="देशभक्ती गीत">देशभक्ती गीत</option>
+                <option value="गवळण">गवळण</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">गीताचे नाव (पर्यायी)</label>
+              <input type="text" name="songTitle" placeholder="गीताचे नाव"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent text-sm" />
+            </div>
+          </div>
+          <!-- Payment info -->
+          <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm text-gray-700">
+            <p class="font-semibold text-orange-700 mb-2">💳 ऑनलाइन पेमेंट (Razorpay)</p>
+            <p>नोंदणी फॉर्म सबमिट केल्यावर Razorpay पेमेंट विंडो उघडेल. पेमेंट यशस्वी झाल्यावर नोंदणी पूर्ण होईल.</p>
+            <p class="mt-1">• बाल वर्ग: ₹201 &nbsp;|&nbsp; महिला/पुरुष वर्ग: ₹301</p>
+          </div>
+          <div class="text-center pt-2">
+            <button type="submit" id="submitBtn"
+              class="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold py-4 px-10 rounded-xl text-lg transition-all duration-200 min-w-48 shadow-lg">
+              <span id="submitText">नोंदणी करा व पेमेंट करा</span>
+              <div id="submitSpinner" class="loading-spinner mx-auto hidden"></div>
+            </button>
+          </div>
+        </form>
       </div>
-      <button onclick="googleSignOut()" class="text-xs text-red-500 hover:text-red-700 underline">बदला</button>
     </div>
-    </div>
-    <form id="registrationForm" class="space-y-6" novalidate>
-      <!-- Row 1: Name, Age, Phone -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">पूर्ण नाव *</label>
-          <input type="text" name="fullName" required placeholder="तुमचे पूर्ण नाव"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent text-sm" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">वय *</label>
-          <input type="number" name="age" min="5" max="60" required placeholder="वय"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent text-sm" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">मोबाइल नंबर *</label>
-          <input type="tel" name="phone" pattern="[6-9][0-9]{9}" required placeholder="9876543210"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent text-sm" />
-        </div>
-      </div>
-      <!-- Row 2: Category, Song Type, Song Title -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">वर्ग *</label>
-          <select name="category" required
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent text-sm">
-            <option value="">वर्ग निवडा</option>
-            <option value="बाल">बाल वर्ग (15 वर्षाआतील) - ₹201</option>
-            <option value="महिला">महिला वर्ग (15+ वर्षे) - ₹301</option>
-            <option value="पुरुष">पुरुष वर्ग (15+ वर्षे) - ₹301</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">गीताचे प्रकार *</label>
-          <select name="songType" required
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent text-sm">
-            <option value="">प्रकार निवडा</option>
-            <option value="तुकडोजी महाराजांचे भजन">तुकडोजी महाराजांचे भजन</option>
-            <option value="अभंग">अभंग</option>
-            <option value="देशभक्ती गीत">देशभक्ती गीत</option>
-            <option value="गवळण">गवळण</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">गीताचे नाव (पर्यायी)</label>
-          <input type="text" name="songTitle" placeholder="गीताचे नाव"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent text-sm" />
-        </div>
-      </div>
-      <!-- Payment info -->
-      <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm text-gray-700">
-        <p class="font-semibold text-orange-700 mb-2">💳 ऑनलाइन पेमेंट (Razorpay)</p>
-        <p>नोंदणी फॉर्म सबमिट केल्यावर Razorpay पेमेंट विंडो उघडेल. पेमेंट यशस्वी झाल्यावर नोंदणी पूर्ण होईल.</p>
-        <p class="mt-1">• बाल वर्ग: ₹201 &nbsp;|&nbsp; महिला/पुरुष वर्ग: ₹301</p>
-        <!-- Admin test mode indicator — shown only when admin enables test mode -->
-        <div id="testModeBanner"
-          class="hidden mt-2 bg-yellow-100 border border-yellow-300 rounded-lg px-3 py-2 flex items-center gap-2">
-          <span class="text-yellow-700 text-xs font-semibold">🧪 Test Mode चालू आहे — ₹1 payment होईल</span>
-          <span class="text-xs text-yellow-600">(Admin द्वारे सक्रिय)</span>
-        </div>
-      </div>
-      <div class="text-center pt-2">
-        <button type="submit" id="submitBtn"
-          class="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold py-4 px-10 rounded-xl text-lg transition-all duration-200 min-w-48 shadow-lg">
-          <span id="submitText">नोंदणी करा व पेमेंट करा</span>
-          <div id="submitSpinner" class="loading-spinner mx-auto hidden"></div>
-        </button>
-      </div>
-    </form>
-    </div>
-    </div>
+  </section>
   </section>
 
 
@@ -1230,7 +1220,8 @@
             const verifyResult = await verifyRes.json();
             if (verifyResult.success) {
               showMessage(`🎉 नोंदणी यशस्वी! आयडी: ${registrationId}`, 'success');
-              showRegistrationSuccess(registrationId,            } else {
+              showRegistrationSuccess(registrationId);
+            } else {
               showMessage('पेमेंट व्हेरिफिकेशन अयशस्वी. कृपया संपर्क करा.', 'error');
             }
           } catch (e) {
