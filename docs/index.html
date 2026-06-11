@@ -1512,17 +1512,27 @@
           const colors = ['from-emerald-400 to-teal-400', 'from-rose-400 to-pink-400', 'from-cyan-400 to-blue-400'];
           const emojis = ['👶', '👩', '👨'];
           const grid = document.getElementById('categoriesGrid');
-          if (grid) grid.innerHTML = cats.map((cat, i) => `
+          if (grid) grid.innerHTML = cats.map((cat, i) => {
+            const detailHtml = (cat.details || []).map(d => {
+              if (d.startsWith('✓')) {
+                return `<li class="flex items-start gap-2"><span class="text-green-500 font-bold flex-shrink-0">✓</span><span>${escHtml(d.substring(1).trim())}</span></li>`;
+              } else if (d.startsWith('•')) {
+                return `<li class="flex items-start gap-2"><span class="text-gray-400 flex-shrink-0">•</span><span>${escHtml(d.substring(1).trim())}</span></li>`;
+              }
+              return `<li>${escHtml(d)}</li>`;
+            }).join('');
+            return `
             <div class="bg-white rounded-2xl card-shadow overflow-hidden">
               <div class="bg-gradient-to-r ${colors[i] || colors[0]} text-white p-6">
                 <div class="text-4xl mb-3">${emojis[i] || '🎵'}</div>
                 <h3 class="text-2xl font-bold">${escHtml(cat.name)}</h3>
                 <p class="opacity-80 text-sm">${escHtml(cat.age || '')}</p>
               </div>
-              <div class="p-6 space-y-2 text-gray-600 text-sm">
-                ${(cat.details || []).map(d => `<p>${escHtml(d)}</p>`).join('')}
+              <div class="p-6 text-gray-600 text-sm">
+                <ul class="space-y-2">${detailHtml}</ul>
               </div>
-            </div>`).join('');
+            </div>`;
+          }).join('');
         } catch (e) { }
       }
     }
