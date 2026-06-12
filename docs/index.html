@@ -555,38 +555,27 @@
                   <span class="text-lg">🌸</span>
                   <div>
                     <p class="font-semibold text-gray-800 text-sm">स्पर्धेबद्दल (About Section)</p>
-                    <p class="text-xs text-gray-500">Hero खालील माहिती विभाग — वर्णन आणि 3 माहिती कार्ड</p>
+                    <p class="text-xs text-gray-500">Hero खालील माहिती विभाग — खालील format वापरा</p>
                   </div>
                 </div>
                 <div class="p-4 space-y-3">
+                  <div
+                    class="text-xs bg-orange-50 border border-orange-200 rounded-lg p-3 text-gray-600 font-mono leading-relaxed">
+                    <strong>Format:</strong><br />
+                    ## मुख्य शीर्षक<br />
+                    परिच्छेद मजकूर<br />
+                    #🎯 उद्देश:<br />
+                    - बुलेट पॉइंट 1<br />
+                    - बुलेट पॉइंट 2<br />
+                    #🏆 यशस्वी प्रवास:<br />
+                    - मजकूर
+                  </div>
                   <div>
                     <label class="text-xs font-medium text-gray-600 mb-1 block">मुख्य वर्णन <span
-                        class="text-gray-400 font-normal">→ "स्पर्धेबद्दल" शीर्षकाखालील परिच्छेद</span></label>
-                    <textarea id="s_aboutDesc" rows="2"
-                      placeholder="उदा. वंदनीय राष्ट्रसंत तुकडोजी महाराज प्रेरित भव्य एकल गीत गायन स्पर्धा"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400"></textarea>
-                  </div>
-                  <p class="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">कार्ड format: <code
-                      class="bg-white px-1 rounded border">इमोजी|शीर्षक|वर्णन</code> &nbsp; उदा: <code
-                      class="bg-white px-1 rounded border">🏆|पुरस्कार|प्रत्येक वर्गात पुरस्कार</code></p>
-                  <div>
-                    <label class="text-xs font-medium text-gray-600 mb-1 block">कार्ड 1 (डावीकडे) <span
-                        class="text-gray-400 font-normal">→ पहिले माहिती कार्ड</span></label>
-                    <input type="text" id="s_aboutCard1"
-                      placeholder="🏆|पुरस्कार|प्रत्येक वर्गात प्रथम ते पाचवे पुरस्कार"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
-                  </div>
-                  <div>
-                    <label class="text-xs font-medium text-gray-600 mb-1 block">कार्ड 2 (मध्यभागी) <span
-                        class="text-gray-400 font-normal">→ दुसरे माहिती कार्ड</span></label>
-                    <input type="text" id="s_aboutCard2" placeholder="👥|सहभाग|सर्व वयोगटातील कलाकार सहभागी होऊ शकतात"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
-                  </div>
-                  <div>
-                    <label class="text-xs font-medium text-gray-600 mb-1 block">कार्ड 3 (उजवीकडे) <span
-                        class="text-gray-400 font-normal">→ तिसरे माहिती कार्ड</span></label>
-                    <input type="text" id="s_aboutCard3" placeholder="🎵|संगीत प्रकार|भजन, अभंग, देशभक्ती गीत, गवळण"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
+                        class="text-gray-400 font-normal">→ "स्पर्धेबद्दल" विभागातील संपूर्ण मजकूर</span></label>
+                    <textarea id="s_aboutDesc" rows="10"
+                      placeholder="## वंदनीय राष्ट्रसंत तुकडोजी महाराज प्रेरित भव्य एकल गीत गायन स्पर्धा&#10;प्रेरणा: राष्ट्रसंत तुकडोजी महाराजांच्या अमोघ विचारांनी...&#10;#🎯 उद्देश:&#10;- भक्तिसंगीताची जपणूक करून संतांचे अमूल्य ठेवा पुढील पिढीपर्यंत पोहोचवणे."
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400 font-mono"></textarea>
                   </div>
                 </div>
               </div>
@@ -775,13 +764,12 @@
     </div>
   </div>
   <section id="about" class="section-fade py-20 bg-white">
-    <div class="max-w-6xl mx-auto px-4">
-      <div class="text-center mb-12">
+    <div class="max-w-4xl mx-auto px-4">
+      <div class="text-center mb-10">
         <h2 class="text-4xl font-bold text-gray-800 mb-4">🌸 स्पर्धेबद्दल</h2>
-        <p id="aboutDesc" class="text-xl text-gray-600 max-w-3xl mx-auto">लोड होत आहे...</p>
       </div>
-      <div id="aboutCards" class="grid md:grid-cols-3 gap-8 mb-12">
-        <div class="col-span-3 text-center py-6">
+      <div id="aboutDesc" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-left">
+        <div class="text-center py-6">
           <div class="loading-spinner mx-auto"></div>
         </div>
       </div>
@@ -1402,18 +1390,33 @@
       if (s.heroVenue) document.getElementById('heroVenue').textContent = s.heroVenue;
       if (s.heroPrize) document.getElementById('heroPrize').textContent = s.heroPrize;
 
-      // About
-      if (s.aboutDesc) document.getElementById('aboutDesc').textContent = s.aboutDesc;
-      const cards = [s.aboutCard1, s.aboutCard2, s.aboutCard3].filter(Boolean);
-      if (cards.length) {
-        document.getElementById('aboutCards').innerHTML = cards.map(c => {
-          const [emoji, title, desc] = c.split('|');
-          return `<div class="text-center p-8 bg-orange-50 rounded-2xl card-shadow">
-            <div class="text-5xl mb-4">${escHtml(emoji || '🎵')}</div>
-            <h3 class="text-xl font-bold text-gray-800 mb-3">${escHtml(title || '')}</h3>
-            <p class="text-gray-600">${escHtml(desc || '')}</p>
-          </div>`;
-        }).join('');
+      // About — structured format rendering
+      const aboutEl = document.getElementById('aboutDesc') || document.getElementById('aboutContainer');
+      if (aboutEl && s.aboutDesc) {
+        const lines = s.aboutDesc.split('\n');
+        let html = '';
+        let inList = false;
+        for (const raw of lines) {
+          const t = raw.trim();
+          if (!t) { if (inList) { html += '</ul>'; inList = false; } continue; }
+          if (t.startsWith('##')) {
+            if (inList) { html += '</ul>'; inList = false; }
+            html += `<h2 style="font-size:1.4rem;font-weight:700;color:#1f2937;margin:0.5rem 0 0.75rem;display:flex;align-items:center;gap:8px"><span style="color:#f97316;font-size:1.2rem">🌸</span>${escHtml(t.replace(/^##\s*/, ''))}</h2>`;
+          } else if (t.startsWith('#')) {
+            if (inList) { html += '</ul>'; inList = false; }
+            const rest = t.replace(/^#\S*\s*/, '');
+            const emoji = t.match(/^#(\S+)/)?.[1] || '●';
+            html += `<h3 style="font-size:1rem;font-weight:700;color:#1f2937;margin:1rem 0 0.4rem;display:flex;align-items:center;gap:6px"><span>${emoji}</span><span>${escHtml(rest)}</span></h3>`;
+          } else if (t.startsWith('-')) {
+            if (!inList) { html += '<ul style="list-style:none;padding:0;margin:0 0 0.5rem">'; inList = true; }
+            html += `<li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:4px;color:#4b5563"><span style="color:#9ca3af;margin-top:6px;flex-shrink:0">●</span><span>${escHtml(t.replace(/^-\s*/, ''))}</span></li>`;
+          } else {
+            if (inList) { html += '</ul>'; inList = false; }
+            html += `<p style="color:#4b5563;line-height:1.8;margin-bottom:0.75rem">${escHtml(t)}</p>`;
+          }
+        }
+        if (inList) html += '</ul>';
+        aboutEl.innerHTML = html;
       }
 
       // Rules
@@ -1485,8 +1488,7 @@
       const set = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
       set('s_heroTitle', s.heroTitle); set('s_heroSubtitle', s.heroSubtitle);
       set('s_heroDate', s.heroDate); set('s_heroVenue', s.heroVenue); set('s_heroPrize', s.heroPrize);
-      set('s_aboutDesc', s.aboutDesc); set('s_aboutCard1', s.aboutCard1);
-      set('s_aboutCard2', s.aboutCard2); set('s_aboutCard3', s.aboutCard3);
+      set('s_aboutDesc', s.aboutDesc);
       set('s_rules', s.rules); set('s_phone1', s.phone1); set('s_phone2', s.phone2);
       set('s_instagram', s.instagram); set('s_address', s.address);
       set('s_importantInfo', s.importantInfo);
@@ -1513,8 +1515,7 @@
       const payload = {
         heroTitle: get('s_heroTitle'), heroSubtitle: get('s_heroSubtitle'),
         heroDate: get('s_heroDate'), heroVenue: get('s_heroVenue'), heroPrize: get('s_heroPrize'),
-        aboutDesc: get('s_aboutDesc'), aboutCard1: get('s_aboutCard1'),
-        aboutCard2: get('s_aboutCard2'), aboutCard3: get('s_aboutCard3'),
+        aboutDesc: get('s_aboutDesc'),
         rules: get('s_rules'), phone1: get('s_phone1'), phone2: get('s_phone2'),
         instagram: get('s_instagram'), address: get('s_address'),
         importantInfo: get('s_importantInfo'),
