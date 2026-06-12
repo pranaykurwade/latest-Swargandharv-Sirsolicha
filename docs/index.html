@@ -225,6 +225,21 @@
 
 <body class="bg-gray-50">
 
+  <!-- MAINTENANCE MODE OVERLAY -->
+  <div id="maintenanceOverlay" class="hidden fixed inset-0 z-[9999] flex items-center justify-center"
+    style="background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);">
+    <div class="text-center text-white px-8 max-w-lg mx-auto">
+      <div class="text-8xl mb-6">🔧</div>
+      <h1 class="text-4xl font-bold mb-4">साइट देखभालीसाठी बंद आहे</h1>
+      <p id="maintenanceMsg" class="text-xl text-orange-100 mb-6">
+        आम्ही साइट सुधारत आहोत. लवकरच परत येऊ. धन्यवाद!
+      </p>
+      <div class="bg-white/20 rounded-2xl px-6 py-4 inline-block">
+        <p class="text-sm text-orange-100">संपर्कासाठी: <strong>+91 91586 68676</strong></p>
+      </div>
+    </div>
+  </div>
+
   <!-- HERO SECTION -->
   <section class="hero-pattern text-white py-16 px-4"
     style="background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);">
@@ -758,6 +773,31 @@
                       class="hidden ml-auto bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full">TEST
                       ON</span>
                   </label>
+                </div>
+              </div>
+
+              <!-- MAINTENANCE MODE -->
+              <div class="border border-red-300 rounded-xl overflow-hidden">
+                <div class="bg-red-50 px-4 py-3 border-b border-red-200 flex items-center gap-2">
+                  <span class="text-lg">🔧</span>
+                  <div>
+                    <p class="font-semibold text-gray-800 text-sm">देखभाल मोड (Maintenance Mode)</p>
+                    <p class="text-xs text-red-500 font-medium">⚠️ ON केल्यास संपूर्ण साइट ब्लॉक होईल</p>
+                  </div>
+                  <div class="ml-auto flex items-center gap-2">
+                    <span id="maintenanceStatus" class="text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700">बंद</span>
+                    <button onclick="toggleMaintenance()" id="maintenanceToggleBtn"
+                      class="px-4 py-1.5 rounded-lg text-sm font-medium text-white transition"
+                      style="background:#dc2626">
+                      ON करा
+                    </button>
+                  </div>
+                </div>
+                <div class="p-4">
+                  <label class="text-xs font-medium text-gray-600 mb-1 block">देखभाल संदेश <span class="text-gray-400 font-normal">(वापरकर्त्यांना दिसणारा)</span></label>
+                  <textarea id="s_maintenanceMessage" rows="2"
+                    placeholder="उदा. आम्ही साइट सुधारत आहोत. लवकरच परत येऊ. धन्यवाद!"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400"></textarea>
                 </div>
               </div>
 
@@ -1415,6 +1455,17 @@
         const data = await res.json();
         if (!data.success) { console.warn('Settings failed:', data.message); return; }
         _settings = data.data;
+        // Check maintenance mode FIRST before rendering anything
+        if (_settings.maintenanceMode === 'true') {
+          document.getElementById('maintenanceOverlay').classList.remove('hidden');
+          document.body.style.overflow = 'hidden';
+          const msg = _settings.maintenanceMessage;
+          if (msg) document.getElementById('maintenanceMsg').textContent = msg;
+          return; // Stop rendering rest of page
+        } else {
+          document.getElementById('maintenanceOverlay').classList.add('hidden');
+          document.body.style.overflow = '';
+        }
         applySettings(_settings);
       } catch (e) { console.warn('Settings load error:', e.message); }
     }
@@ -1529,6 +1580,9 @@
       set('s_rules', s.rules); set('s_phone1', s.phone1); set('s_phone2', s.phone2);
       set('s_instagram', s.instagram); set('s_address', s.address);
       set('s_importantInfo', s.importantInfo);
+      // Load maintenance settings
+      set('s_maintenanceMessage', s.maintenanceMessage);
+      updateMaintenanceUI(s.maintenanceMode === 'true');
       // Load categories into simple fields
       if (s.categories) {
         try {
@@ -1544,6 +1598,52 @@
             if (d) d.value = (c.details || []).join('\n');
           });
         } catch (e) { }
+      }
+    }
+
+    // ─── MAINTENANCE MODE ────────────────────────────────────────────────────────
+    async function toggleMaintenance() {
+      const btn = document.getElementById('maintenanceToggleBtn');
+      const status = document.getElementById('maintenanceStatus');
+      const isOn = _settings.maintenanceMode === 'true';
+      const newVal = isOn ? 'false' : 'true';
+
+      if (newVal === 'true') {
+        if (!confirm('⚠️ Maintenance Mode ON करायचा आहे का? साइट सर्व वापरकर्त्यांसाठी ब्लॉक होईल.')) return;
+      }
+
+      try {
+        const msg = document.getElementById('s_maintenanceMessage')?.value?.trim() || '';
+        // Save both maintenanceMode and message
+        const res = await fetch(`${API_BASE_URL}/settings`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ maintenanceMode: newVal, maintenanceMessage: msg }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          _settings.maintenanceMode = newVal;
+          updateMaintenanceUI(newVal === 'true');
+          showMessage(newVal === 'true' ? '🔧 Maintenance Mode चालू झाला!' : '✅ Maintenance Mode बंद झाला!',
+            newVal === 'true' ? 'warning' : 'success');
+        } else throw new Error(data.message);
+      } catch (e) { showMessage('एरर: ' + e.message, 'error'); }
+    }
+
+    function updateMaintenanceUI(isOn) {
+      const btn = document.getElementById('maintenanceToggleBtn');
+      const status = document.getElementById('maintenanceStatus');
+      if (!btn || !status) return;
+      if (isOn) {
+        btn.textContent = 'OFF करा';
+        btn.style.background = '#16a34a';
+        status.textContent = 'चालू';
+        status.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-red-100 text-red-700';
+      } else {
+        btn.textContent = 'ON करा';
+        btn.style.background = '#dc2626';
+        status.textContent = 'बंद';
+        status.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700';
       }
     }
 
