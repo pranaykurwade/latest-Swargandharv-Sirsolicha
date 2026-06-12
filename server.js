@@ -657,28 +657,19 @@ async function approveRegistrationByOrderId(orderId, paymentId, signature) {
 
   if (signature) update['payment.razorpaySignature'] = signature;
 
-
-
+  // Only update if not already approved (prevents double processing from verify + webhook)
   const result = await Registration.findOneAndUpdate(
-
-    { 'payment.razorpayOrderId': orderId },
-
+    { 'payment.razorpayOrderId': orderId, status: { $ne: 'approved' } },
     update,
-
     { new: true }
-
   );
 
   if (result) {
-
     console.log('Registration approved:', result.registrationId);
-
     await sendEmailNotification(result);
-
   } else {
-
-    console.warn('No registration found for orderId:', orderId);
-
+    // Already approved (duplicate call from verify + webhook) — skip silently
+    console.log('Registration already approved for orderId:', orderId, '— skipping duplicate');
   }
 
   return result;
