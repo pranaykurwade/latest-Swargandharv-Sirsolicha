@@ -1186,6 +1186,9 @@
 
       try {
         const data = Object.fromEntries(new FormData(form));
+        // Check if admin test mode is enabled
+        const isTest = document.getElementById('testModeToggle')?.checked === true;
+        if (isTest) data.testMode = true;
         const res = await fetch(`${API_BASE_URL}/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1196,8 +1199,12 @@
 
         // Open Razorpay
         const { registrationId, orderId, amount, currency, keyId } = result.data;
-        openRazorpay({ registrationId, orderId, amount, currency, keyId, name: data.fullName, phone: data.phone });
+        openRazorpay({ registrationId, orderId, amount, currency, keyId, name: data.fullName, phone: data.phone, isTest });
         form.reset();
+        if (isTest) {
+          const toggle = document.getElementById('testModeToggle');
+          if (toggle) { toggle.checked = false; toggleTestMode({ checked: false }); }
+        }
       } catch (err) {
         showMessage(err.message, 'error');
         form.classList.add('error-shake');
@@ -1221,13 +1228,13 @@
       }
     }
 
-    function openRazorpay({ registrationId, orderId, amount, currency, keyId, name, phone }) {
+    function openRazorpay({ registrationId, orderId, amount, currency, keyId, name, phone, isTest }) {
       const options = {
         key: keyId,
         amount,
         currency,
         name: 'स्वरगंधर्व सिरसोलीचा',
-        description: 'एकल गीत गायन स्पर्धा 2025 नोंदणी',
+        description: isTest ? '🧪 TEST — ₹1 only (Admin Test Mode)' : 'एकल गीत गायन स्पर्धा 2025 नोंदणी',
         order_id: orderId,
         prefill: {
           name,

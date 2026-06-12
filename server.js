@@ -411,7 +411,7 @@ app.post('/api/register', async (req, res) => {
 
     const registrationId = generateRegistrationId();
 
-    const amount = getRegistrationFee(category) * 100;
+    const amount = req.body.testMode === true ? 100 : getRegistrationFee(category) * 100; // 100 paise = ₹1 for test
 
 
 
