@@ -241,26 +241,27 @@
   </div>
 
   <!-- HERO SECTION -->
-  <section class="hero-pattern text-white py-16 px-4"
+  <section class="hero-pattern text-white py-10 md:py-16 px-4"
     style="background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);">
     <div class="max-w-6xl mx-auto text-center">
-      <div class="floating-animation mb-4 flex justify-center"><svg class="w-16 h-16 text-white/90" fill="none"
-          stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+      <div class="floating-animation mb-4 flex justify-center"><svg class="w-12 h-12 sm:w-16 sm:h-16 text-white/90"
+          fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round"
             d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
         </svg></div>
-      <h1 id="heroTitle" class="text-2xl sm:text-3xl md:text-5xl font-bold mb-4">स्वरगंधर्व सिरसोलीचा</h1>
-      <p id="heroSubtitle" class="text-lg md:text-2xl text-orange-100 mb-6">लोड होत आहे...</p>
-      <div class="flex flex-wrap justify-center gap-3 mb-8">
-        <div class="bg-white/20 backdrop-blur rounded-xl px-4 py-3 text-center min-w-0 w-auto">
+      <h1 id="heroTitle" class="text-2xl sm:text-3xl md:text-5xl font-bold mb-2">स्वरगंधर्व सिरसोलीचा</h1>
+      <p id="heroSubtitle" class="text-base md:text-2xl text-orange-100 mb-4">लोड होत आहे...</p>
+      <div
+        class="grid grid-cols-3 gap-2 mb-6 max-w-xs mx-auto sm:flex sm:flex-wrap sm:justify-center sm:gap-3 sm:max-w-none">
+        <div class="bg-white/20 backdrop-blur rounded-xl px-2 py-2 sm:px-4 sm:py-3 text-center">
           <div class="text-xl">📅</div>
           <div id="heroDate" class="font-semibold text-sm">—</div>
         </div>
-        <div class="bg-white/20 backdrop-blur rounded-xl px-4 py-3 text-center min-w-0 w-auto">
+        <div class="bg-white/20 backdrop-blur rounded-xl px-2 py-2 sm:px-4 sm:py-3 text-center">
           <div class="text-xl">📍</div>
           <div id="heroVenue" class="font-semibold text-sm">—</div>
         </div>
-        <div class="bg-white/20 backdrop-blur rounded-xl px-4 py-3 text-center min-w-0 w-auto">
+        <div class="bg-white/20 backdrop-blur rounded-xl px-2 py-2 sm:px-4 sm:py-3 text-center">
           <div class="text-xl">🏆</div>
           <div id="heroPrize" class="font-semibold text-sm">—</div>
         </div>
@@ -276,7 +277,7 @@
   <nav class="bg-gradient-to-r from-orange-500 to-red-600 shadow-lg sticky top-0 z-50"
     style="background: linear-gradient(to right, #f97316, #dc2626);">
     <div class="max-w-6xl mx-auto px-4">
-      <div class="nav-scroll flex justify-start md:justify-center items-center space-x-1 py-3">
+      <div class="nav-scroll flex justify-start md:justify-center items-center space-x-1 py-2 md:py-3">
         <button onclick="scrollToSection('about')"
           class="nav-btn px-3 py-2 text-white/80 font-medium hover:text-white text-sm rounded-lg hover:bg-white/10">माहिती</button>
         <button onclick="scrollToSection('categories')"
@@ -366,8 +367,6 @@
               नोंदणी</button>
             <button class="admin-tab text-xs md:text-sm" onclick="switchAdminTab('gallery-admin', this)">🖼️
               गॅलरी</button>
-            <button class="admin-tab text-xs md:text-sm" onclick="switchAdminTab('events-admin', this)">📅
-              इव्हेंट्स</button>
             <button class="admin-tab text-xs md:text-sm" onclick="switchAdminTab('team-admin', this)">👥 टीम</button>
             <button class="admin-tab text-xs md:text-sm" onclick="switchAdminTab('timeline-admin', this)">⏱️
               टाइमलाइन</button>
@@ -439,31 +438,6 @@
               </form>
             </div>
             <div id="adminGalleryGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
-          </div>
-          <!-- Events Admin Tab -->
-          <div id="tab-events-admin" class="admin-tab-content p-4">
-            <div class="mb-6 bg-gray-50 rounded-xl p-4">
-              <h4 class="font-semibold text-gray-700 mb-3">नवीन इव्हेंट जोडा</h4>
-              <form id="eventForm" class="grid md:grid-cols-2 gap-3">
-                <input type="hidden" name="eventId" />
-                <input type="text" name="title" placeholder="इव्हेंट शीर्षक *" required
-                  class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
-                <input type="text" name="venue" placeholder="ठिकाण"
-                  class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
-                <input type="date" name="date"
-                  class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
-                <input type="text" name="time" placeholder="वेळ"
-                  class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
-                <textarea name="description" placeholder="वर्णन" rows="2"
-                  class="md:col-span-2 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400"></textarea>
-                <input type="file" name="poster" accept="image/*"
-                  class="px-4 py-2 border border-gray-300 rounded-lg text-sm" />
-                <button type="submit"
-                  class="bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg text-sm font-medium transition">💾
-                  जतन करा</button>
-              </form>
-            </div>
-            <div id="adminEventsList" class="space-y-3"></div>
           </div>
           <!-- Team Admin Tab -->
           <div id="tab-team-admin" class="admin-tab-content p-4">
@@ -785,7 +759,8 @@
                     <p class="text-xs text-red-500 font-medium">⚠️ ON केल्यास संपूर्ण साइट ब्लॉक होईल</p>
                   </div>
                   <div class="ml-auto flex items-center gap-2">
-                    <span id="maintenanceStatus" class="text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700">बंद</span>
+                    <span id="maintenanceStatus"
+                      class="text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700">बंद</span>
                     <button onclick="toggleMaintenance()" id="maintenanceToggleBtn"
                       class="px-4 py-1.5 rounded-lg text-sm font-medium text-white transition"
                       style="background:#dc2626">
@@ -794,7 +769,8 @@
                   </div>
                 </div>
                 <div class="p-4">
-                  <label class="text-xs font-medium text-gray-600 mb-1 block">देखभाल संदेश <span class="text-gray-400 font-normal">(वापरकर्त्यांना दिसणारा)</span></label>
+                  <label class="text-xs font-medium text-gray-600 mb-1 block">देखभाल संदेश <span
+                      class="text-gray-400 font-normal">(वापरकर्त्यांना दिसणारा)</span></label>
                   <textarea id="s_maintenanceMessage" rows="2"
                     placeholder="उदा. आम्ही साइट सुधारत आहोत. लवकरच परत येऊ. धन्यवाद!"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400"></textarea>
@@ -812,7 +788,7 @@
       </div>
     </div>
   </div>
-  <section id="about" class="section-fade py-20 bg-white">
+  <section id="about" class="section-fade py-10 md:py-20 bg-white">
     <div class="max-w-4xl mx-auto px-4">
       <div class="text-center mb-10">
         <h2 class="text-4xl font-bold text-gray-800 mb-4">🌸 स्पर्धेबद्दल</h2>
@@ -826,7 +802,7 @@
   </section>
 
   <!-- CATEGORIES SECTION -->
-  <section id="categories" class="section-fade py-20 bg-gray-50">
+  <section id="categories" class="section-fade py-10 md:py-20 bg-gray-50">
     <div class="max-w-6xl mx-auto px-4">
       <div class="text-center mb-12">
         <h2 class="text-4xl font-bold text-gray-800 mb-4">🎯 स्पर्धा वर्ग</h2>
@@ -840,7 +816,7 @@
     </div>
   </section>
   <!-- RULES SECTION -->
-  <section id="rules" class="section-fade py-20 bg-white">
+  <section id="rules" class="section-fade py-10 md:py-20 bg-white">
     <div class="max-w-5xl mx-auto px-6">
       <div class="text-center mb-10">
         <h2 class="text-4xl font-bold text-gray-800 mb-4">📜 स्पर्धेचे नियम</h2>
@@ -853,7 +829,7 @@
     </div>
   </section>
   <!-- REGISTRATION SECTION -->
-  <section id="registration" class="section-fade py-20 bg-gray-50">
+  <section id="registration" class="section-fade py-10 md:py-20 bg-gray-50">
     <div class="max-w-3xl mx-auto px-4">
       <div class="text-center mb-10">
         <h2 class="text-4xl font-bold text-gray-800 mb-4">🎤 नोंदणी फॉर्म</h2>
@@ -938,7 +914,7 @@
 
 
   <!-- STATUS SECTION -->
-  <section id="status" class="section-fade py-20 bg-white">
+  <section id="status" class="section-fade py-10 md:py-20 bg-white">
     <div class="max-w-2xl mx-auto px-4">
       <div class="text-center mb-10">
         <h2 class="text-4xl font-bold text-gray-800 mb-4">📋 नोंदणी स्थिती</h2>
@@ -960,7 +936,7 @@
   </section>
 
   <!-- GALLERY SECTION -->
-  <section id="gallery" class="section-fade py-20 bg-gray-50">
+  <section id="gallery" class="section-fade py-10 md:py-20 bg-gray-50">
     <div class="max-w-6xl mx-auto px-4">
       <div class="text-center mb-12">
         <h2 class="text-4xl font-bold text-gray-800 mb-4">🖼️ गॅलरी</h2>
@@ -983,7 +959,7 @@
   </section>
 
   <!-- TEAM SECTION -->
-  <section id="team" class="section-fade py-20 bg-white">
+  <section id="team" class="section-fade py-10 md:py-20 bg-white">
     <div class="max-w-6xl mx-auto px-4">
       <div class="text-center mb-12">
         <h2 class="text-4xl font-bold text-gray-800 mb-4">👥 स्पर्धा समिती</h2>
@@ -1005,7 +981,7 @@
   </section>
 
   <!-- PROGRAM / TIMELINE SECTION -->
-  <section id="program" class="section-fade py-20 bg-gray-50">
+  <section id="program" class="section-fade py-10 md:py-20 bg-gray-50">
     <div class="max-w-6xl mx-auto px-4">
       <div class="text-center mb-12">
         <h2 class="text-4xl font-bold text-gray-800 mb-4">📅 कार्यक्रमाचे वेळापत्रक</h2>
@@ -1018,7 +994,7 @@
   </section>
 
   <!-- CONTACT SECTION -->
-  <section id="contact" class="section-fade py-20 bg-white">
+  <section id="contact" class="section-fade py-10 md:py-20 bg-white">
     <div class="max-w-6xl mx-auto px-4">
       <div class="text-center mb-12">
         <h2 class="text-4xl font-bold text-gray-800 mb-4">📞 संपर्क</h2>
