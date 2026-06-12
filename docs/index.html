@@ -8,7 +8,9 @@
   <meta name="description"
     content="वंदनीय राष्ट्रसंत तुकडोजी महाराज प्रेरित भव्य एकल गीत गायन स्पर्धा 2025. बाल, महिला व पुरुष वर्गात सहभागी व्हा." />
   <meta name="theme-color" content="#f97316" />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio"></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Hind:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
@@ -1194,12 +1196,8 @@
 
         // Open Razorpay
         const { registrationId, orderId, amount, currency, keyId } = result.data;
-        openRazorpay({ registrationId, orderId, amount, currency, keyId, name: data.fullName, phone: data.phone, isTest });
+        openRazorpay({ registrationId, orderId, amount, currency, keyId, name: data.fullName, phone: data.phone });
         form.reset();
-        if (isTest) {
-          const toggle = document.getElementById('testModeToggle');
-          if (toggle) { toggle.checked = false; toggleTestMode({ checked: false }); }
-        }
       } catch (err) {
         showMessage(err.message, 'error');
         form.classList.add('error-shake');
@@ -1223,13 +1221,13 @@
       }
     }
 
-    function openRazorpay({ registrationId, orderId, amount, currency, keyId, name, phone, isTest }) {
+    function openRazorpay({ registrationId, orderId, amount, currency, keyId, name, phone }) {
       const options = {
         key: keyId,
         amount,
         currency,
         name: 'स्वरगंधर्व सिरसोलीचा',
-        description: isTest ? '🧪 TEST PAYMENT — ₹1 only' : 'एकल गीत गायन स्पर्धा 2025 नोंदणी',
+        description: 'एकल गीत गायन स्पर्धा 2025 नोंदणी',
         order_id: orderId,
         prefill: {
           name,
