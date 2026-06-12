@@ -1749,5 +1749,18 @@ app.listen(port, () => {
 
   console.log(`Server running on port ${port}`);
 
+  // Self-ping every 14 minutes to prevent Render free tier from sleeping
+  const SELF_URL = process.env.RENDER_EXTERNAL_URL || process.env.FRONTEND_URL?.replace('github.io/latest-Swargandharv-Sirsolicha', 'latest-swargandharv-sirsolicha.onrender.com');
+  if (SELF_URL && process.env.NODE_ENV !== 'development') {
+    setInterval(async () => {
+      try {
+        await fetch(`https://latest-swargandharv-sirsolicha.onrender.com/api/stats`);
+        console.log('Self-ping OK:', new Date().toISOString());
+      } catch (e) {
+        console.warn('Self-ping failed:', e.message);
+      }
+    }, 14 * 60 * 1000); // every 14 minutes
+  }
+
 });
 
