@@ -1731,12 +1731,35 @@
     }
 
     // ─── LIGHTBOX ─────────────────────────────────────────────────────────────────
-    function openLightbox(src, caption, downloadSrc) {
+    let _idxGalleryImages = [];
+    let _idxCurrentImg = 0;
+    let _idxTouchStartX = 0;
+
+    function openLightbox(src, caption, downloadSrc, index) {
+      _idxCurrentImg = index !== undefined ? index : _idxGalleryImages.findIndex(i => i.src === src);
       document.getElementById('lightboxImg').src = src;
       document.getElementById('lightboxCaption').textContent = caption || '';
       document.getElementById('lightboxDownload').dataset.src = downloadSrc || src;
       document.getElementById('lightboxModal').classList.remove('hidden');
       document.getElementById('lightboxModal').classList.add('flex');
+    }
+
+    function idxLightboxPrev() {
+      if (!_idxGalleryImages.length) return;
+      _idxCurrentImg = (_idxCurrentImg - 1 + _idxGalleryImages.length) % _idxGalleryImages.length;
+      const img = _idxGalleryImages[_idxCurrentImg];
+      document.getElementById('lightboxImg').src = img.src;
+      document.getElementById('lightboxCaption').textContent = img.caption || '';
+      document.getElementById('lightboxDownload').dataset.src = img.src;
+    }
+
+    function idxLightboxNext() {
+      if (!_idxGalleryImages.length) return;
+      _idxCurrentImg = (_idxCurrentImg + 1) % _idxGalleryImages.length;
+      const img = _idxGalleryImages[_idxCurrentImg];
+      document.getElementById('lightboxImg').src = img.src;
+      document.getElementById('lightboxCaption').textContent = img.caption || '';
+      document.getElementById('lightboxDownload').dataset.src = img.src;
     }
     function closeLightbox(e) {
       if (e.target === document.getElementById('lightboxModal')) closeLightboxBtn();
@@ -1745,6 +1768,18 @@
       document.getElementById('lightboxModal').classList.add('hidden');
       document.getElementById('lightboxModal').classList.remove('flex');
     }
+
+    // Touch swipe for index lightbox
+    (() => {
+      let tx = 0;
+      const modal = document.getElementById('lightboxModal');
+      if (!modal) return;
+      modal.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+      modal.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - tx;
+        if (Math.abs(dx) > 50) { if (dx < 0) idxLightboxNext(); else idxLightboxPrev(); }
+      }, { passive: true });
+    })();
     async function downloadImage() {
       const btn = document.getElementById('lightboxDownload');
       const src = btn.dataset.src;

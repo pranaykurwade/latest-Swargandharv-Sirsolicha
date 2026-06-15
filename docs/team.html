@@ -85,6 +85,7 @@
                onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=f97316&color=fff'" />
           <h3 class="font-semibold text-gray-800 text-sm">${escHtml(m.name)}</h3>
           ${m.designation ? `<p class="text-xs text-gray-500 mt-1">${escHtml(m.designation)}</p>` : ''}
+          ${m.phone ? `<a href="tel:${m.phone}" class="text-green-600 text-xs mt-1 block hover:underline">📞 ${escHtml(m.phone)}</a>` : ''}
           ${m.instagram ? `<a href="https://instagram.com/${m.instagram}" target="_blank" class="text-orange-500 text-xs mt-1 block hover:underline">@${escHtml(m.instagram)}</a>` : ''}
         </div>`).join('');
     }
