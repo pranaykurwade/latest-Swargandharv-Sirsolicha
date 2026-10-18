@@ -59,35 +59,75 @@
 
   <!-- Team Grid -->
   <section class="py-16 max-w-6xl mx-auto px-4">
+
+    <!-- Count -->
+    <div class="flex justify-end mb-4">
+      <span id="teamCount" class="text-sm text-gray-500"></span>
+    </div>
+
     <div id="teamGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       <div class="col-span-full flex justify-center py-12">
         <div class="loading-spinner"></div>
       </div>
     </div>
+
+    <!-- Pagination -->
+    <div id="pagination" class="flex justify-center gap-2 mt-8 flex-wrap"></div>
+
   </section>
 
   <script>
-    // Change to your deployed backend URL when going live
-    // Example: const API_BASE_URL = 'https://latest-swargandharv-sirsolicha.onrender.com/api';
     const API_BASE_URL = 'https://latest-swargandharv-sirsolicha.onrender.com/api';
+
+    const ITEMS_PER_PAGE = 16;
+    let allMembers = [];
+    let currentPage = 1;
 
     function escHtml(str) {
       if (!str) return '';
-      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    function renderMembers(members) {
+    function renderPage(page) {
+      currentPage = page;
       const grid = document.getElementById('teamGrid');
-      grid.innerHTML = members.map(m => `
+      const countEl = document.getElementById('teamCount');
+
+      const start = (page - 1) * ITEMS_PER_PAGE;
+      const pageMembers = allMembers.slice(start, start + ITEMS_PER_PAGE);
+
+      countEl.textContent = `${allMembers.length} सदस्य`;
+
+      grid.innerHTML = pageMembers.map(m => `
         <div class="member-card bg-white rounded-2xl shadow-lg p-5 text-center">
-          <img src="${m.photoUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(m.name) + '&background=f97316&color=fff'}"
-               alt="${escHtml(m.name)}" class="w-24 h-24 mx-auto rounded-full mb-3 object-cover shadow-md" loading="lazy"
-               onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=f97316&color=fff'" />
+          <div class="w-24 h-24 mx-auto rounded-full mb-3 shadow-md overflow-hidden bg-gray-100 flex-shrink-0">
+            <img src="${m.photoUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(m.name) + '&background=f97316&color=fff'}"
+                 alt="${escHtml(m.name)}" class="w-full h-full object-cover object-top" loading="lazy"
+                 onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=f97316&color=fff'" />
+          </div>
           <h3 class="font-semibold text-gray-800 text-sm">${escHtml(m.name)}</h3>
           ${m.designation ? `<p class="text-xs text-gray-500 mt-1">${escHtml(m.designation)}</p>` : ''}
           ${m.phone ? `<a href="tel:${m.phone}" class="text-green-600 text-xs mt-1 block hover:underline">📞 ${escHtml(m.phone)}</a>` : ''}
           ${m.instagram ? `<a href="https://instagram.com/${m.instagram}" target="_blank" class="text-orange-500 text-xs mt-1 block hover:underline">@${escHtml(m.instagram)}</a>` : ''}
         </div>`).join('');
+
+      renderPagination(Math.ceil(allMembers.length / ITEMS_PER_PAGE), page);
+    }
+
+    function renderPagination(totalPages, current) {
+      const el = document.getElementById('pagination');
+      if (totalPages <= 1) { el.innerHTML = ''; return; }
+      let html = '';
+      for (let i = 1; i <= totalPages; i++) {
+        html += `<button onclick="goToPage(${i})"
+          class="px-4 py-2 rounded-lg text-sm font-medium transition ${i === current ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-orange-50 border border-gray-200'}">${i}</button>`;
+      }
+      el.innerHTML = html;
+    }
+
+    function goToPage(page) {
+      renderPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     async function loadTeam() {
@@ -96,7 +136,8 @@
         const res = await fetch(`${API_BASE_URL}/team`);
         const data = await res.json();
         if (data.success && data.data.length) {
-          renderMembers(data.data);
+          allMembers = data.data;
+          renderPage(1);
         } else {
           grid.innerHTML = `<div class="col-span-full text-center py-16 text-gray-400">
             <div class="text-5xl mb-4">📭</div>
