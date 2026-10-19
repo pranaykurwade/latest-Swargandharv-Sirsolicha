@@ -499,6 +499,8 @@
                   class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
                 <input type="tel" name="phone" placeholder="फोन नंबर"
                   class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
+                <input type="number" name="order" placeholder="क्रम (रिकामे सोडल्यास शेवटी जाईल)"
+                  class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
                 <input type="file" name="photo" accept="image/*"
                   class="px-4 py-2 border border-gray-300 rounded-lg text-sm" />
                 <div class="md:col-span-3 flex gap-3">
@@ -2253,6 +2255,7 @@
         form.querySelector('[name="designation"]').value = m.designation || '';
         form.querySelector('[name="instagram"]').value = m.instagram || '';
         form.querySelector('[name="phone"]').value = m.phone || '';
+        form.querySelector('[name="order"]').value = m.order ?? '';
         form.scrollIntoView({ behavior: 'smooth' });
       } catch (e) { showMessage('एरर: ' + e.message, 'error'); }
     }
