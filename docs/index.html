@@ -977,11 +977,12 @@
         <p class="text-xl text-gray-600">तुमच्या नोंदणीची स्थिती तपासा</p>
       </div>
       <div class="bg-white rounded-2xl card-shadow p-8">
-        <div class="flex gap-3">
+        <div class="flex flex-wrap gap-3">
           <input type="text" id="statusRegistrationId" placeholder="SG123456"
-            class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+            class="flex-1 min-w-0 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent"
             onkeydown="if(event.key==='Enter') checkStatus()" />
-          <button onclick="checkStatus()" class="text-white px-6 py-3 rounded-lg font-medium transition"
+          <button onclick="checkStatus()"
+            class="shrink-0 text-white px-6 py-3 rounded-lg font-medium transition w-full sm:w-auto"
             style="background: linear-gradient(135deg, #f97316, #dc2626);">
             तपासा
           </button>
