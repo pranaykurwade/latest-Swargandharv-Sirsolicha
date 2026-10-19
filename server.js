@@ -1421,9 +1421,7 @@ app.post('/api/team', uploadTeam.single('photo'), async (req, res) => {
   }
 });
 
-);
 
-);
 
 
 
@@ -1443,9 +1441,7 @@ app.put('/api/team/:id', uploadTeam.single('photo'), async (req, res) => {
   }
 });
 
-);
 
-);
 
 
 
