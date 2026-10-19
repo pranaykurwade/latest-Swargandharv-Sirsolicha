@@ -1370,7 +1370,7 @@ app.get('/api/team', async (req, res) => {
 
   try {
 
-    const members = await TeamMember.find({ isActive: true }).sort({ order: 1, createdAt: 1 });
+    const members = await TeamMember.find({ isActive: true }).sort({ createdAt: 1 });
 
     res.json({ success: true, data: members });
 
@@ -1390,7 +1390,7 @@ app.get('/api/team/all', async (req, res) => {
 
   try {
 
-    const members = await TeamMember.find().sort({ order: 1, createdAt: 1 });
+    const members = await TeamMember.find().sort({ createdAt: 1 });
 
     res.json({ success: true, data: members });
 
@@ -1408,24 +1408,9 @@ app.get('/api/team/all', async (req, res) => {
 
 app.post('/api/team', uploadTeam.single('photo'), async (req, res) => {
   try {
-    const { name, designation, instagram, facebook, phone, order } = req.body;
-    const parsedOrder = (order !== undefined && order !== '' && !isNaN(parseInt(order, 10)))
-      ? parseInt(order, 10) : null;
-
-    let resolvedOrder;
-    if (parsedOrder !== null) {
-      // Insert at specific position: shift everyone at >= parsedOrder up by 1 first
-      await TeamMember.updateMany({ order: { $gte: parsedOrder } }, { $inc: { order: 1 } });
-      resolvedOrder = parsedOrder;
-    } else {
-      // No position given: append after the current last member
-      const last = await TeamMember.findOne({ isActive: true }).sort({ order: -1 }).select('order');
-      resolvedOrder = last ? last.order + 1 : 1;
-    }
-
+    const { name, designation, instagram, facebook, phone } = req.body;
     const member = new TeamMember({
       name, designation, instagram, facebook, phone,
-      order: resolvedOrder,
       photoUrl: req.file ? req.file.path : null,
       photoPublicId: req.file ? req.file.filename : null,
     });
@@ -1438,47 +1423,27 @@ app.post('/api/team', uploadTeam.single('photo'), async (req, res) => {
 
 );
 
+);
+
 
 
 // PUT /api/team/:id  (admin)
 
 app.put('/api/team/:id', uploadTeam.single('photo'), async (req, res) => {
   try {
-    const { name, designation, instagram, facebook, phone, order, isActive } = req.body;
-
-    const current = await TeamMember.findById(req.params.id).select('order');
-    if (!current) return res.status(404).json({ success: false, message: 'Member not found' });
-
-    const parsedOrder = (order !== undefined && order !== '' && !isNaN(parseInt(order, 10)))
-      ? parseInt(order, 10) : null;
-    const newOrder = parsedOrder !== null ? parsedOrder : current.order;
-
-    if (newOrder !== current.order) {
-      if (newOrder > current.order) {
-        // Moving down the list: shift members between (old+1 .. new) up by -1
-        await TeamMember.updateMany(
-          { _id: { $ne: req.params.id }, order: { $gt: current.order, $lte: newOrder } },
-          { $inc: { order: -1 } }
-        );
-      } else {
-        // Moving up the list: shift members between (new .. old-1) down by +1
-        await TeamMember.updateMany(
-          { _id: { $ne: req.params.id }, order: { $gte: newOrder, $lt: current.order } },
-          { $inc: { order: 1 } }
-        );
-      }
-    }
-
-    const update = { name, designation, instagram, facebook, phone, order: newOrder };
+    const { name, designation, instagram, facebook, phone, isActive } = req.body;
+    const update = { name, designation, instagram, facebook, phone };
     if (isActive !== undefined) update.isActive = isActive === 'true';
     if (req.file) { update.photoUrl = req.file.path; update.photoPublicId = req.file.filename; }
-
     const member = await TeamMember.findByIdAndUpdate(req.params.id, update, { new: true });
+    if (!member) return res.status(404).json({ success: false, message: 'Member not found' });
     res.json({ success: true, data: member });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+);
 
 );
 
