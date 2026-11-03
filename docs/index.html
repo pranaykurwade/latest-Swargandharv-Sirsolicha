@@ -2286,12 +2286,13 @@
         const res = await fetch(`${API_BASE_URL}/team/all`);
         const data = await res.json();
         if (!data.success || !data.data.length) { grid.innerHTML = `<p class="col-span-full text-center text-gray-400 py-4">कोणतेही सदस्य नाहीत</p>`; return; }
-        grid.innerHTML = data.data.map(m => `
+        grid.innerHTML = data.data.sort((a, b) => a.order - b.order).map(m => `
       <div class="bg-white rounded-xl shadow p-4 text-center">
         <div class="w-20 h-20 mx-auto rounded-full mb-2 overflow-hidden bg-gray-100 flex-shrink-0">
           <img src="${m.photoUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(m.name) + '&background=f97316&color=fff'}"
                alt="${escHtml(m.name)}" class="w-full h-full object-cover object-top" loading="lazy" />
         </div>
+        <span class="inline-block bg-orange-100 text-orange-700 text-xs font-bold px-2 py-0.5 rounded-full mb-1">#${m.order}</span>
         <p class="font-semibold text-sm text-gray-800">${escHtml(m.name)}</p>
         ${m.designation ? `<p class="text-xs text-gray-500">${escHtml(m.designation)}</p>` : ''}
         <div class="flex justify-center gap-2 mt-3">
@@ -2308,9 +2309,54 @@
         const form = e.target;
         const fd = new FormData(form);
         const id = fd.get('memberId');
+        const orderVal = fd.get('order');
+        const parsedOrder = (orderVal && orderVal !== '' && !isNaN(parseInt(orderVal, 10)) && parseInt(orderVal, 10) >= 1)
+          ? parseInt(orderVal, 10) : null;
         const btn = form.querySelector('button[type="submit"]');
         btn.disabled = true; btn.textContent = 'जतन होत आहे...';
         try {
+          // ── Client-side shift: do it here so it works even on cold Render starts ──
+          if (parsedOrder !== null) {
+            // Fetch all current members
+            const allRes = await fetch(`${API_BASE_URL}/team/all`);
+            const allData = await allRes.json();
+            if (allData.success) {
+              const members = allData.data.sort((a, b) => a.order - b.order);
+              if (!id) {
+                // POST (new member): shift everyone at >= parsedOrder up by 1
+                const toShift = members.filter(m => m.order >= parsedOrder);
+                for (const m of toShift) {
+                  await fetch(`${API_BASE_URL}/team/${m._id}`, {
+                    method: 'PUT',
+                    body: (() => { const f = new FormData(); f.append('name', m.name); f.append('order', m.order + 1); if (m.designation) f.append('designation', m.designation); if (m.phone) f.append('phone', m.phone); if (m.instagram) f.append('instagram', m.instagram); f.append('isActive', 'true'); return f; })()
+                  });
+                }
+              } else {
+                // PUT (edit): bidirectional shift
+                const current = members.find(m => m._id === id);
+                if (current && parsedOrder !== current.order) {
+                  if (parsedOrder > current.order) {
+                    const toShift = members.filter(m => m._id !== id && m.order > current.order && m.order <= parsedOrder);
+                    for (const m of toShift) {
+                      await fetch(`${API_BASE_URL}/team/${m._id}`, {
+                        method: 'PUT',
+                        body: (() => { const f = new FormData(); f.append('name', m.name); f.append('order', m.order - 1); if (m.designation) f.append('designation', m.designation); if (m.phone) f.append('phone', m.phone); if (m.instagram) f.append('instagram', m.instagram); f.append('isActive', 'true'); return f; })()
+                      });
+                    }
+                  } else {
+                    const toShift = members.filter(m => m._id !== id && m.order >= parsedOrder && m.order < current.order);
+                    for (const m of toShift) {
+                      await fetch(`${API_BASE_URL}/team/${m._id}`, {
+                        method: 'PUT',
+                        body: (() => { const f = new FormData(); f.append('name', m.name); f.append('order', m.order + 1); if (m.designation) f.append('designation', m.designation); if (m.phone) f.append('phone', m.phone); if (m.instagram) f.append('instagram', m.instagram); f.append('isActive', 'true'); return f; })()
+                      });
+                    }
+                  }
+                }
+              }
+            }
+          }
+          // ── Now save the actual member ──────────────────────────────────────────
           const url = id ? `${API_BASE_URL}/team/${id}` : `${API_BASE_URL}/team`;
           const method = id ? 'PUT' : 'POST';
           const res = await fetch(url, { method, body: fd });
