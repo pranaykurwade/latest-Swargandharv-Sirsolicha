@@ -126,7 +126,7 @@
       grid.innerHTML = `<div class="col-span-full flex justify-center py-12"><div class="loading-spinner"></div></div>`;
 
       try {
-        const params = new URLSearchParams({ page, limit: 16, search });
+        const params = new URLSearchParams({ page, limit: 24, search });
         const res = await fetch(`${API_BASE_URL}/gallery?${params}`);
         const data = await res.json();
 
