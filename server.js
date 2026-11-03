@@ -499,6 +499,50 @@ app.post('/api/register', async (req, res) => {
 
 
 
+// POST /api/register/manual  (admin — cash payment, bypass Razorpay)
+app.post('/api/register/manual', async (req, res) => {
+  try {
+    const { fullName, age, phone, email, category, songType, songTitle, amountPaid } = req.body;
+
+    if (!fullName || !age || !phone || !category || !songType) {
+      return res.status(400).json({ success: false, message: 'नाव, वय, फोन, वर्ग आणि गाण्याचा प्रकार आवश्यक आहे' });
+    }
+
+    const existing = await Registration.findOne({ phone });
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'हा मोबाइल नंबर आधीच नोंदणीकृत आहे' });
+    }
+
+    const registrationId = generateRegistrationId();
+    const fee = amountPaid ? parseInt(amountPaid) * 100 : getRegistrationFee(category) * 100;
+
+    const registration = new Registration({
+      registrationId,
+      fullName,
+      age: parseInt(age),
+      phone,
+      email: email || '',
+      category,
+      songType,
+      songTitle: songTitle || '',
+      payment: {
+        amount: fee,
+        status: 'paid',
+        paidAt: new Date(),
+        razorpayOrderId: 'CASH-' + registrationId,
+      },
+      status: 'approved',
+      emailSent: false,
+    });
+
+    await registration.save();
+    res.json({ success: true, data: { registrationId, status: 'approved' } });
+  } catch (error) {
+    console.error('Manual registration error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // POST /api/payment/verify  — called by frontend after Razorpay checkout
 
 app.post('/api/payment/verify', async (req, res) => {

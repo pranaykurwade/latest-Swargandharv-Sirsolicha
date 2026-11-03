@@ -421,6 +421,48 @@
           </div>
           <!-- Registrations Tab -->
           <div id="tab-registrations" class="admin-tab-content active p-4">
+
+            <!-- Manual Registration Form -->
+            <div class="mb-6 bg-orange-50 border border-orange-200 rounded-xl p-4">
+              <h4 class="font-semibold text-gray-700 mb-3">➕ मॅन्युअल नोंदणी (रोख पेमेंट)</h4>
+              <form id="manualRegForm" class="grid md:grid-cols-3 gap-3">
+                <input type="text" name="fullName" placeholder="पूर्ण नाव *" required
+                  class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
+                <input type="number" name="age" placeholder="वय *" required min="1" max="100"
+                  class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
+                <input type="tel" name="phone" placeholder="मोबाइल नंबर *" required
+                  class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
+                <input type="email" name="email" placeholder="ईमेल (ऐच्छिक)"
+                  class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
+                <select name="category" required
+                  class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400">
+                  <option value="">वर्ग निवडा *</option>
+                  <option value="बाल">बाल (₹201)</option>
+                  <option value="महिला">महिला (₹301)</option>
+                  <option value="पुरुष">पुरुष (₹301)</option>
+                </select>
+                <select name="songType" required
+                  class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400">
+                  <option value="">गाण्याचा प्रकार *</option>
+                  <option value="भावगीत">भावगीत</option>
+                  <option value="चित्रगीत">चित्रगीत</option>
+                  <option value="भक्तिगीत">भक्तिगीत</option>
+                  <option value="लोकगीत">लोकगीत</option>
+                  <option value="नाट्यगीत">नाट्यगीत</option>
+                </select>
+                <input type="text" name="songTitle" placeholder="गाण्याचे नाव"
+                  class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
+                <input type="number" name="amountPaid" placeholder="भरलेली रक्कम (₹)"
+                  class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400" />
+                <div class="md:col-span-3">
+                  <button type="submit"
+                    class="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg text-sm font-medium transition">💾
+                    मॅन्युअल नोंदणी जतन करा (रोख)</button>
+                </div>
+              </form>
+              <div id="manualRegResult" class="mt-3 hidden"></div>
+            </div>
+
             <div class="flex flex-wrap gap-3 mb-4">
               <input type="text" id="regSearch" placeholder="नाव / आयडी शोधा..." onkeyup="filterRegistrations()"
                 class="flex-1 min-w-48 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400 focus:border-transparent" />
@@ -1888,6 +1930,42 @@
     }
 
     async function loadAdminData() {
+      // ── Manual Registration Handler ───────────────────────────────────────────
+      document.getElementById('manualRegForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const btn = this.querySelector('button[type="submit"]');
+        const resultEl = document.getElementById('manualRegResult');
+        btn.disabled = true; btn.textContent = 'जतन होत आहे...';
+        try {
+          const fd = new FormData(this);
+          const body = {};
+          fd.forEach((v, k) => { if (v) body[k] = v; });
+          const res = await fetch(`${API_BASE_URL}/register/manual`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          if (data.success) {
+            resultEl.className = 'mt-3 bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800';
+            resultEl.innerHTML = `✅ नोंदणी यशस्वी! नोंदणी आयडी: <strong>${data.data.registrationId}</strong>`;
+            this.reset();
+            loadAdminData();
+          } else {
+            resultEl.className = 'mt-3 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800';
+            resultEl.innerHTML = `❌ ${data.message}`;
+          }
+          resultEl.classList.remove('hidden');
+          setTimeout(() => resultEl.classList.add('hidden'), 6000);
+        } catch (err) {
+          resultEl.className = 'mt-3 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800';
+          resultEl.innerHTML = `❌ एरर: ${err.message}`;
+          resultEl.classList.remove('hidden');
+        } finally {
+          btn.disabled = false; btn.textContent = '💾 मॅन्युअल नोंदणी जतन करा (रोख)';
+        }
+      });
+
       try {
         const [statsRes, regsRes] = await Promise.all([
           fetch(`${API_BASE_URL}/stats`),
