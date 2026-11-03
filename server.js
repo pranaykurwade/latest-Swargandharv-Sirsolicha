@@ -1453,7 +1453,7 @@ app.get('/api/team/all', async (req, res) => {
 app.post('/api/team', uploadTeam.single('photo'), async (req, res) => {
   try {
     const { name, designation, instagram, facebook, phone, order } = req.body;
-    const parsedOrder = (order !== undefined && order !== '' && !isNaN(parseInt(order, 10)))
+    const parsedOrder = (order !== undefined && order !== '' && !isNaN(parseInt(order, 10)) && parseInt(order, 10) >= 1)
       ? parseInt(order, 10) : null;
 
     let resolvedOrder;
@@ -1494,7 +1494,7 @@ app.put('/api/team/:id', uploadTeam.single('photo'), async (req, res) => {
     const current = await TeamMember.findById(req.params.id).select('order');
     if (!current) return res.status(404).json({ success: false, message: 'Member not found' });
 
-    const parsedOrder = (order !== undefined && order !== '' && !isNaN(parseInt(order, 10)))
+    const parsedOrder = (order !== undefined && order !== '' && !isNaN(parseInt(order, 10)) && parseInt(order, 10) >= 1)
       ? parseInt(order, 10) : null;
     const newOrder = parsedOrder !== null ? parsedOrder : current.order;
 
